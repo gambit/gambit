@@ -734,6 +734,8 @@
                   (begin
                     ;; a processor that is currently idle was found
                     (macro-processor-deq-remove! processor)
+                    ;; ##wait! may remove it again when the wait returns.
+                    (macro-processor-deq-init! processor)
                     (macro-unlock-current-vm!)
                     (macro-lock-processor! processor)
                     (##btq-insert! processor thread)
@@ -2527,6 +2529,87 @@
                           (else
                            (macro-unlock-thread! next-thread))))))))))))
 
+(define-prim (##thread-deadlock-release! thread count result)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Release the processor locks in reverse acquisition order.
+  (let loop ((i count))
+    (if (##fx> i 0)
+        (begin
+          (macro-unlock-processor! (##processor (##fx- i 1)))
+          (loop (##fx- i 1)))))
+  (macro-unlock-thread! thread)
+
+  (if (macro-processor? result)
+      (##wait-abort-no-remove! result))
+  result)
+
+(define-prim (##thread-check-deadlock!)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Called only after this processor has registered in the VM's wait
+  ;; deque. A processor with no current thread can still be completing
+  ;; an operation that wakes another thread, so that field alone does
+  ;; not establish that the processor is idle.
+  ;;
+  ;; Return #f when another processor can make progress, 'retry when a
+  ;; competing operation prevents the check, or the processor on which
+  ;; the primordial thread has been made runnable.
+
+  (let ((thread (macro-primordial-thread))
+        (count (##current-vm-processor-count)))
+    (if (##not (macro-trylock-thread! thread))
+        'retry
+        (if (macro-terminated-thread-given-initialized? thread)
+            (##thread-deadlock-release! thread 0 #f)
+            (let lock-processors ((i 0))
+              (if (##fx< i count)
+                  (let ((processor (##processor i)))
+                    (if (##not (macro-trylock-processor! processor))
+                        (##thread-deadlock-release! thread i #f)
+                        (if (or (macro-processor-current-thread processor)
+                                (##not (##eq? (macro-btq-leftmost processor)
+                                              processor))
+                                (##not (##eq? (macro-toq-leftmost processor)
+                                              processor))
+                                (##not (##eq? (macro-btq-deq-next processor)
+                                              processor))
+                                (##not (##null? (macro-processor-interrupts-head
+                                                processor))))
+                            (##thread-deadlock-release! thread (##fx+ i 1) #f)
+                            (lock-processors (##fx+ i 1)))))
+                  (begin
+                    (macro-lock-current-vm!)
+                    (let check-waiting ((i 0))
+                      (if (##fx< i count)
+                          (let ((processor (##processor i)))
+                            (if (##eq? (macro-processor-deq-next processor)
+                                       processor)
+                                (begin
+                                  (macro-unlock-current-vm!)
+                                  (##thread-deadlock-release! thread count #f))
+                                (check-waiting (##fx+ i 1))))
+                          (let ((btq (macro-thread->btq thread)))
+                            (if (and btq (macro-trylock-btq! btq))
+                                (let ((processor
+                                       (or (macro-thread-pinned thread)
+                                           (macro-current-processor))))
+                                  (##thread-btq-remove! thread)
+                                  (macro-thread-resume-thunk-set!
+                                   thread
+                                   ##thread-deadlock-action!)
+                                  (##btq-insert! processor thread)
+                                  (macro-unlock-btq! btq)
+                                  (macro-unlock-current-vm!)
+                                  (##thread-deadlock-release!
+                                   thread count processor))
+                                (begin
+                                  (macro-unlock-current-vm!)
+                                  (##thread-deadlock-release!
+                                   thread count 'retry)))))))))))))
+
 (define-prim (##wait! devices timeout)
 
   (##declare (not interrupts-enabled))
@@ -2537,10 +2620,17 @@
     (macro-processor-deq-insert-at-tail! (macro-current-vm) processor)
     (macro-unlock-current-vm!)
 
-    (let ((code (##os-condvar-select! devices timeout)))
+    (let ((code
+           (if (and (##not devices)
+                    (##eq? timeout #t)
+                    (##thread-check-deadlock!))
+               0
+               (##os-condvar-select! devices timeout))))
 
       (macro-lock-current-vm!)
       (macro-processor-deq-remove! processor)
+      ;; Detached links also make wait-deque membership explicit.
+      (macro-processor-deq-init! processor)
       (macro-unlock-current-vm!)
 
       code)))
@@ -2551,6 +2641,8 @@
 
   (macro-lock-current-vm!)
   (macro-processor-deq-remove! processor)
+  ;; Make the subsequent removal in ##wait! harmless.
+  (macro-processor-deq-init! processor)
   (macro-unlock-current-vm!)
 
   (##wait-abort-no-remove! processor))
