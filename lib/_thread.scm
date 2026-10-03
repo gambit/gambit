@@ -1603,11 +1603,9 @@
 
   (let ((end-condvar (macro-thread-end-condvar thread))) ;; check state
 
-    (cond ((##not end-condvar)
+    (cond ((macro-terminated-thread-given-initialized? thread)
 
-           ;; Thread is already terminated.
-
-           ;; this case is impossible, but keep test for now
+           ;; Thread is already terminated, or is abandoning its mutexes.
 
            ;; release low-level lock of thread
            (macro-unlock-thread! thread)
@@ -1630,7 +1628,6 @@
 
            ;; Change state of thread.
 
-           (macro-thread-end-condvar-set! thread #f)
            (macro-thread-exception?-set! thread exception?)
            (macro-thread-result-set! thread result)
            (macro-thread-cont-set! thread #t)
@@ -1657,8 +1654,17 @@
              (let ((next-btq (macro-btq-deq-next thread)))
                (if (##not (##eq? next-btq thread))
                    (begin
-                     (##btq-abandon! next-btq)
+                     ;; Acquire the btq before the thread, as mutex
+                     ;; operations do. Ownership may change while the
+                     ;; thread's lock is released, so ##btq-abandon!
+                     ;; checks it again with both locks acquired.
+                     (macro-unlock-thread! thread)
+                     (##btq-abandon! next-btq thread)
+                     (macro-lock-thread! thread)
                      (loop)))))
+
+           ;; Publish completion only after all mutexes have been abandoned.
+           (macro-thread-end-condvar-set! thread #f)
 
            ;; release low-level lock of thread
            (macro-unlock-thread! thread)
@@ -1667,30 +1673,44 @@
 
            (##void)))))
 
-(define-prim (##btq-abandon! btq)
+(define-prim (##btq-abandon! btq owner)
 
   (##declare (not interrupts-enabled))
 
-  (macro-lock-btq! btq)
-  (macro-btq-deq-remove! btq)
-  (macro-if-btq-next
-   btq
-   next-thread
+  ;; No low-level locks are held on entry. The btq was owned by owner
+  ;; when selected, but another thread may since have unlocked it.
 
-   (if (macro-mutex? btq)
-       (begin
-         (macro-lock-thread! next-thread)
-         (##mutex-signal-no-reschedule! btq next-thread #t))
-       (begin
-         (let ((owner (macro-btq-owner btq)))
-           (if (macro-thread? owner)
-               (##thread-effective-priority-downgrade! owner)))
-         (macro-btq-unlink! btq (macro-mutex-state-abandoned))
+  (macro-lock-btq! btq)
+  (macro-lock-thread! owner)
+
+  (if (##eq? (macro-btq-owner btq) owner)
+
+      (begin
+        (macro-if-btq-next
+         btq
+         next-thread
+         (if (##not (macro-mutex? btq))
+             (##thread-effective-priority-downgrade! owner))
+         (##void))
+        (macro-btq-deq-remove! btq)
+        (macro-btq-unlink! btq (macro-mutex-state-abandoned))
+        (macro-unlock-thread! owner)
+
+        (macro-if-btq-next
+         btq
+         next-thread
+
+         (if (macro-mutex? btq)
+             ;; Acquire the waiting thread and its requested owner in
+             ;; order, without retaining the terminating owner's lock.
+             (##mutex-unlock-out-of-line! btq next-thread #t)
+             (macro-unlock-btq! btq))
+
          (macro-unlock-btq! btq)))
 
-   (begin
-     (macro-btq-unlink! btq (macro-mutex-state-abandoned))
-     (macro-unlock-btq! btq))))
+      (begin
+        (macro-unlock-thread! owner)
+        (macro-unlock-btq! btq))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2058,7 +2078,9 @@
 
          (macro-make-constant-thread-state-initialized))
 
-        ((macro-terminated-thread-given-initialized? thread)
+        ;; A terminal public state, like a completed join, must wait
+        ;; until the thread has abandoned all its owned mutexes.
+        ((##not (macro-thread-end-condvar thread))
          (if (macro-thread-exception? thread)
 
              (let ((result (macro-thread-result thread)))
@@ -3660,7 +3682,7 @@
                                 (if new-owner
 
                                     ;; check if new owner thread is terminated
-                                    (if (macro-thread-end-condvar new-owner)
+                                    (if (##not (macro-terminated-thread-given-initialized? new-owner))
 
                                         (begin
 
@@ -3816,7 +3838,11 @@
 
             result)))))
 
-(define-prim (##mutex-unlock-out-of-line! mutex first-thread)
+(define-prim (##mutex-unlock-out-of-line!
+              mutex
+              first-thread
+              #!optional
+              (abandoned? #f))
 
   (##declare (not interrupts-enabled))
 
@@ -3824,6 +3850,7 @@
 
   ;; There is at least one thread waiting on the mutex, and
   ;; first-thread is the next in line to wake up.
+  ;; abandoned? is true when the previous owner is terminating.
 
   (let* ((new-owner (macro-thread-result first-thread)) ;; fetch saved new owner
          (x (macro-btq-owner mutex)) ;; get current owner if any
@@ -3850,7 +3877,7 @@
           ;; The mutex-lock! operation specified a new-owner thread.
 
           ;; check if the new-owner thread terminated
-          (if (macro-thread-end-condvar new-owner)
+          (if (##not (macro-terminated-thread-given-initialized? new-owner))
 
               (begin
 
@@ -3870,7 +3897,9 @@
 
                 (macro-thread-resume-thunk-set!
                  first-thread
-                 ##thread-locked-mutex-action!))
+                 (if abandoned?
+                     ##thread-abandoned-mutex-action!
+                     ##thread-locked-mutex-action!)))
 
               (begin
 
@@ -3892,7 +3921,9 @@
 
           (macro-thread-resume-thunk-set!
            first-thread
-           ##thread-locked-mutex-action!)))
+           (if abandoned?
+               ##thread-abandoned-mutex-action!
+               ##thread-locked-mutex-action!))))
 
     (macro-add-thread-to-run-queue-of-current-processor-preferably! first-thread)
 
@@ -3949,7 +3980,7 @@
                     (loop))));; TODO: trylock?
 
           ;; is the new-owner thread terminated?
-          (if (macro-thread-end-condvar new-owner)
+          (if (##not (macro-terminated-thread-given-initialized? new-owner))
 
               (begin
 
