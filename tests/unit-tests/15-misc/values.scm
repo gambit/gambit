@@ -1,0 +1,65 @@
+(include "#.scm")
+
+(test-eq #t (boolean? #t))
+(test-eq #t (boolean? #f))
+(test-eq #f (boolean? '()))
+(test-eq #t (boolean=? #f #f #f))
+(test-eq #f (boolean=? #t #t #f))
+(test-error type-exception? (boolean=? #t 0))
+(test-eq 'retained (identity 'retained))
+(test-eq #!void (void))
+
+(test-assert
+ (let* ((value (list 'shared)) (b (box value)))
+   (and (box? b) (eq? value (unbox b))
+        (begin (set-box! b 'changed) (eq? 'changed (unbox b)))
+        (equal? value '(shared)))))
+(test-eq #f (box? (vector 1)))
+(test-error type-exception? (unbox #f))
+(test-error type-exception? (set-box! #f 1))
+
+;; Explicit execution makes the will test independent of GC timing.
+(test-equal '(#t #t 1 #f)
+ (let* ((object (list 'alive))
+        (calls 0)
+        (w (make-will object (lambda (x)
+                              (test-eq object x)
+                              (set! calls (+ calls 1))))))
+   (let ((is-will (will? w)) (same (eq? object (will-testator w))))
+     (will-execute! w)
+     (will-execute! w)
+     (list is-will same calls (will-testator w)))))
+(test-eq #f (will? #f))
+(test-error type-exception? (make-will 'x #f))
+(test-error type-exception? (will-testator #f))
+(test-error type-exception? (will-execute! #f))
+
+;; Equal hash inputs have equal hashes, without assuming that distinct
+;; inputs cannot collide or that a particular hash algorithm is used.
+(test-assert
+ (let ((x (list 'retained)))
+   (and (exact-integer? (eq?-hash x))
+        (= (eq?-hash x) (eq?-hash x))
+        (>= (eq?-hash x) 0))))
+(test-eqv (eqv?-hash 100000000000000000000)
+          (eqv?-hash (+ 99999999999999999999 1)))
+(test-eqv (equal?-hash (list 'a (vector 1 2)))
+          (equal?-hash (list 'a (vector 1 2))))
+(test-eqv (string=?-hash "abc") (string=?-hash (string #\a #\b #\c)))
+(test-eqv (string-ci=?-hash "AbC") (string-ci=?-hash "aBc"))
+(test-assert
+ (let* ((x (list 'kept-alive)) (n (object->serial-number x)))
+   (and (exact-integer? n) (= n (object->serial-number x))
+        (eq? x (serial-number->object n)))))
+(test-equal "(a 1)" (object->string '(a 1)))
+(test-equal '(a #(1 2) "hello")
+ (u8vector->object (object->u8vector '(a #(1 2) "hello"))))
+
+(test-assert
+ (let ((count 0))
+   (let ((p (delay (begin (set! count (+ count 1)) 'answer))))
+     (and (promise? p) (eq? 'answer (force p))
+          (eq? 'answer (force p)) (= count 1)))))
+(test-eq #f (promise? 'answer))
+(test-eq 'answer (force (make-promise 'answer)))
+(test-eq 'ordinary (touch 'ordinary))

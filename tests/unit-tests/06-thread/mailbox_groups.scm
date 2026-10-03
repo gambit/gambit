@@ -1,0 +1,110 @@
+(include "#.scm")
+
+;; Use a fresh thread for mailbox tests so the calling thread's messages
+;; cannot affect ordering or the empty-mailbox timeout case.
+(test-equal '(a b a c empty)
+ (thread-join!
+  (thread-start!
+   (make-thread
+    (lambda ()
+      (thread-send (current-thread) 'a)
+      (thread-send (current-thread) 'b)
+      (thread-send (current-thread) 'c)
+      (let* ((first (thread-mailbox-next 0 'missing))
+             (second (thread-mailbox-next 0 'missing)))
+        (thread-mailbox-extract-and-rewind)
+        (thread-mailbox-rewind)
+        (let* ((a (thread-receive 0 'missing))
+               (b (thread-receive 0 'missing))
+               (c (thread-receive 0 'empty)))
+          (list first second a b c))))))
+  10 'timed-out))
+
+(test-assert
+ (let* ((parent (make-thread-group 'parent))
+        (child (make-thread-group 'child parent))
+        (worker (make-thread (lambda () (thread-receive 10 'timed-out))
+                             'worker child)))
+   (dynamic-wind
+    (lambda () #f)
+    (lambda ()
+      (test-eq #t (thread-group? child))
+      (test-eq #f (thread-group? #f))
+      (test-eq 'child (thread-group-name child))
+      (test-eq parent (thread-group-parent child))
+      (test-equal (list child) (thread-group->thread-group-list parent))
+      (test-equal (vector child) (thread-group->thread-group-vector parent))
+      (test-equal (list worker) (thread-group->thread-list child))
+      (test-equal (vector worker) (thread-group->thread-vector child))
+      (test-eq #f (thread-group-specific child))
+      (thread-group-specific-set! child 'metadata)
+      (test-eq 'metadata (thread-group-specific child))
+      (thread-base-priority-set! worker 2)
+      (thread-priority-boost-set! worker 3)
+      (test-assert (= 2 (thread-base-priority worker)))
+      (test-assert (= 3 (thread-priority-boost worker)))
+      (thread-start! worker)
+      (thread-suspend! worker)
+      (thread-resume! worker)
+      (thread-group-suspend! child)
+      (thread-send worker 'done)
+      (thread-group-resume! child)
+      (test-eq 'done (thread-join! worker 10 'timed-out))
+      #t)
+    (lambda () (thread-group-terminate! parent)))))
+
+(test-eq 'metadata
+ (let ((m (make-mutex)))
+   (mutex-specific-set! m 'metadata)
+   (mutex-specific m)))
+(test-equal '(event metadata)
+ (let ((cv (make-condition-variable 'event)))
+   (condition-variable-specific-set! cv 'metadata)
+   (list (condition-variable-name cv) (condition-variable-specific cv))))
+
+;; A worker holds the mutex until it waits on the condition variable.
+;; Acquiring that mutex before signaling prevents a lost wakeup.
+(test-eq 'awake
+ (let* ((m (make-mutex)) (cv (make-condition-variable))
+        (parent (current-thread))
+        (worker
+         (make-thread
+          (lambda ()
+            (mutex-lock! m)
+            (thread-send parent 'ready)
+            (test-eq #t (mutex-unlock! m cv 10))
+            'awake))))
+   (thread-start! worker)
+   (test-eq 'ready (thread-receive 10 'timed-out))
+   (mutex-lock! m)
+   (condition-variable-signal! cv)
+   (mutex-unlock! m)
+   (thread-join! worker 10 'timed-out)))
+
+(test-equal '(awake awake)
+ (let* ((m (make-mutex)) (cv (make-condition-variable))
+        (parent (current-thread))
+        (make-waiter
+         (lambda ()
+           (make-thread
+            (lambda ()
+              (mutex-lock! m)
+              (thread-send parent 'ready)
+              (test-eq #t (mutex-unlock! m cv 10))
+              'awake))))
+        (a (make-waiter)) (b (make-waiter)))
+   (thread-start! a)
+   (thread-start! b)
+   (test-eq 'ready (thread-receive 10 'timed-out))
+   (test-eq 'ready (thread-receive 10 'timed-out))
+   (mutex-lock! m)
+   (condition-variable-broadcast! cv)
+   (mutex-unlock! m)
+   (list (thread-join! a 10 'timed-out) (thread-join! b 10 'timed-out))))
+(test-eq #t (thread-state-running? (thread-state (current-thread))))
+(test-eq #f (thread-state-running? (thread-state (make-thread list))))
+(test-assert (time? (timeout->time 1)))
+(test-assert
+ (let ((t (seconds->time 1000))) (eq? t (timeout->time t))))
+(test-error type-exception? (thread-group-name #f))
+(test-error type-exception? (thread-send #f 'message))
