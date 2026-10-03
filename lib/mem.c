@@ -6390,7 +6390,7 @@ ___SIZE_TS requested_words_still;)
       target_nb_sections = compute_nb_msections_needed(target_movable_space) +
                            nb_msections_stacks;
 
-      upper_bound_nb_sections = target_nb_sections;
+      SET_MAX(target_nb_sections, lower_bound_nb_sections);
 
       if (___GSTATE->setup_params.max_heap > 0)
         {
@@ -6398,7 +6398,6 @@ ___SIZE_TS requested_words_still;)
             ((___GSTATE->setup_params.max_heap >> ___LWS) -
              occupied_words_still) / ___MSECTION_SIZE;
 
-          SET_MAX(target_nb_sections, lower_bound_nb_sections);
           SET_MIN(target_nb_sections, upper_bound_nb_sections);
         }
 
