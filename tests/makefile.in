@@ -73,7 +73,8 @@ mandir = @mandir@
 RCFILES = makefile.in \
 debug.scm error.scm r4rstest.scm mix.scm mem.scm client.c server.scm server.h \
 test1.ok test2.ok test3.ok test4.ok test5.ok test6.ok test7.ok \
-test8.ok test9.ok test10.scm input run-unit-tests.scm
+test8.ok test9.ok test10.scm input run-unit-tests.scm \
+inline-primitives.scm
 
 GENDISTFILES =
 
@@ -108,7 +109,7 @@ core-post:
 
 .NOTPARALLEL:
 
-check: core test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
+check: core test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11 test-inline-primitives
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \
@@ -239,6 +240,10 @@ st-php:
 st-java:
 	(cd ../lib; make _gambit.java)
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -java -gsc
+
+test-inline-primitives:
+	@echo "------------ TEST (internal primitive inlining in safe code)"
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i $(srcdirpfx)inline-primitives.scm
 
 bootstrap-pre:
 

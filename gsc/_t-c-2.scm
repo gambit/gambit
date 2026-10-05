@@ -3227,15 +3227,28 @@
          (list "BOOLEAN" (generator opnds #f sn))))
      prim)))
 
+(define (targ-primitive-safety-check prim proc-safe?)
+  ;; The ## operations with C inliners specify their own argument checking.
+  ;; Their inlining does not require an unsafe caller.
+  ;; Specialization of ordinary procedures to unchecked ## operations remains
+  ;; guarded by the safety declaration in _prims.scm.
+  (let ((name (proc-obj-name prim)))
+    (cond ((and (>= (string-length name) 2)
+                (char=? (string-ref name 0) #\#)
+                (char=? (string-ref name 1) #\#))
+           (lambda (env) #t))
+          ((procedure? proc-safe?)
+           proc-safe?)
+          (else
+           (lambda (env)
+             (or proc-safe?
+                 (not (safe? env))))))))
+
 (define (targ-setup-test-proc proc-safe? args-flo? optimizable? generator)
   (lambda (prim)
     (proc-obj-testable?-set!
      prim
-     (if (procedure? proc-safe?)
-         proc-safe?
-         (lambda (env)
-           (or proc-safe?
-               (not (safe? env))))))
+     (targ-primitive-safety-check prim proc-safe?))
     (proc-obj-test-set!
      prim
      (vector
@@ -3304,11 +3317,7 @@
   (lambda (prim)
     (proc-obj-inlinable?-set!
       prim
-      (if (procedure? proc-safe?)
-          proc-safe?
-          (lambda (env)
-            (or proc-safe?
-                (not (safe? env))))))
+      (targ-primitive-safety-check prim proc-safe?))
     (proc-obj-inline-set!
       prim
       (lambda (opnds loc sn)
@@ -3334,11 +3343,7 @@
   (lambda (prim)
     (proc-obj-inlinable?-set!
       prim
-      (if (procedure? proc-safe?)
-          proc-safe?
-          (lambda (env)
-            (or proc-safe?
-                (not (safe? env))))))
+      (targ-primitive-safety-check prim proc-safe?))
     (proc-obj-inline-set!
       prim
       (lambda (opnds loc sn)
