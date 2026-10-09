@@ -2938,30 +2938,35 @@ for a discussion of branch cuts.
                                          (##flcopysign (macro-inexact-+pi/2) inexact-y)))
                      ((##fl= inexact-x (macro-inexact-+1))
                       (macro-cpxnum-make
-                       (if (fl= inexact-y (macro-inexact-+0))
-                           (macro-inexact-+inf)
-                           (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
-                                           (##flsqrt abs-y))))
-                       (##fl/ (##flcopysign (##fl+ (macro-inexact-+pi/2)
+                       (cond ((##fl< abs-y (macro-inexact-+1))
+                              (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
+                                              (##flsqrt abs-y))))
+                             ;; for large abs-y,we use a formula similar to the one below.
+                             ((##fl< abs-y 1.0e9)
+                              (##fl* (macro-inexact-+1/4) (##fllog1p (##fl/ (macro-inexact-+4) (##flsquare abs-y)))))
+                             ;; See https://github.com/racket/math/issues/119#issuecomment-6085143590
+                             (else
+                              (##flexpt abs-y -2.)))
+                       (##fl* (##flcopysign (##fl+ (macro-inexact-+pi/2)
                                                    (##flatan (##fl/ abs-y
                                                                     (macro-inexact-+2))))
                                             inexact-y)
-                              (macro-inexact-+2))))
+                              (macro-inexact-+1/2))))
                      (else
                       (macro-cpxnum-make
                        (if (##eqv? x 0)
                            ;; if abs-y were exact in the next expression (no matter its value)
                            ;; then the argument to fllog1p would be exact 0, so the result would be exact 0.
                            0
-                           (##fl/ (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)   ;; was (##* 4 x) originally
+                           (##fl* (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)   ;; was (##* 4 x) originally
                                                     (##fl+ (##flsquare (##fl- (macro-inexact-+1) inexact-x))
                                                            (##flsquare abs-y))))
-                                  (macro-inexact-+4)))
-                       (##fl/ (##carg (macro-cpxnum-make (##fl- (##fl* (##fl- (macro-inexact-+1) inexact-x)
+                                  (macro-inexact-+1/4)))
+                       (##fl* (##carg (macro-cpxnum-make (##fl- (##fl* (##fl- (macro-inexact-+1) inexact-x)
                                                                        (##fl+ (macro-inexact-+1) inexact-x))
                                                                 (##flsquare abs-y))
                                                          (##fl* (macro-inexact-+2) inexact-y)))
-                              (macro-inexact-+2)))))))
+                              (macro-inexact-+1/2)))))))
     (##* beta (##conjugate zeta))))
 
 (define-prim (##ctanh xi+ieta)

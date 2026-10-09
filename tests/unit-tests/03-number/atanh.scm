@@ -20,6 +20,11 @@
 
 (test-approximate (test-atanh 1.) (atanh 1.) 1e-12)
 (test-approximate (test-atanh 1+0.i) (atanh 1+0.i) 1e-12)
+
+;;; Test adapted from https://github.com/bdeket/ChezScheme/commit/c48f78347cb5bd35a668b82a49111385619020d5
+
+(test-eqv 1e-200 (real-part (atanh 1.+1e100i)))
+
 ;; test-atanh is not correct for 1.+0.i
 (test-approximate (test-atanh 1-0.i) (atanh 1-0.i) 1e-12)
 ;; test-atanh is not correct for 1.-0.i

@@ -529,6 +529,7 @@
 (##define-macro (macro-inexact-+1)     1.0)
 (##define-macro (macro-inexact--1)    -1.0)
 (##define-macro (macro-inexact-+1/2)   0.5)
+(##define-macro (macro-inexact-+1/4)   0.25)
 (##define-macro (macro-inexact-+0)     0.0)
 (##define-macro (macro-inexact--0)    -0.0)
 (##define-macro (macro-inexact-+pi)    3.141592653589793)
