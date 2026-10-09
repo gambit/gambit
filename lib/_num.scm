@@ -2942,7 +2942,7 @@ for a discussion of branch cuts.
                            (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
                                            (##flsqrt abs-y)))
                            ;; for large abs-y,we use a formula similar to the one below.
-                           (##fl* (macro-inexact-+1/4) (##fllog1p (##fl* (macro-inexact-+4) (##flexpt abs-y -2.)))))
+                           (##fl* (macro-inexact-+1/4) (##fllog1p (##flexpt (##fl* (macro-inexact-+1/2) abs-y) -2.))))
                        (##fl* (##flcopysign (##fl+ (macro-inexact-+pi/2)
                                                    (##flatan (##fl/ abs-y
                                                                     (macro-inexact-+2))))
