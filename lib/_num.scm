@@ -2939,10 +2939,10 @@ for a discussion of branch cuts.
                      ((##fl= inexact-x (macro-inexact-+1))
                       (macro-cpxnum-make
                        (if (##fl< abs-y (macro-inexact-+1))
-                          (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
-                                          (##flsqrt abs-y)))
-                          ;; for large abs-y,we use a formula similar to the one below.
-                          (##fl* (macro-inexact-+1/4) (##fllog1p (##fl* (macro-inexact-+4) (##flexpt abs-y -2.)))))
+                           (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
+                                           (##flsqrt abs-y)))
+                           ;; for large abs-y,we use a formula similar to the one below.
+                           (##fl* (macro-inexact-+1/4) (##fllog1p (##fl* (macro-inexact-+4) (##flexpt abs-y -2.)))))
                        (##fl* (##flcopysign (##fl+ (macro-inexact-+pi/2)
                                                    (##flatan (##fl/ abs-y
                                                                     (macro-inexact-+2))))
