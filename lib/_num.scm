@@ -2938,14 +2938,26 @@ for a discussion of branch cuts.
                                          (##flcopysign (macro-inexact-+pi/2) inexact-y)))
                      ((##fl= inexact-x (macro-inexact-+1))
                       (macro-cpxnum-make
-                       (if (##fl< abs-y (macro-inexact-+1))
-                           (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
-                                           (##flsqrt abs-y)))
-                           ;; for large abs-y,we use a formula similar to the one below.
+
+                       ;; Kahan's original formula is
+
+                       ;; (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
+                       ;;                 (##flsqrt abs-y)))
+
+                       ;; When abs-y < 1e-8, then (##fl+ (macro-inexact-+4) (##flsquare abs-y)) is 4., so we
+                       ;; rewrite it as the first branch.  We avoid underflow except when abs-y is the smallest
+                       ;; positive flonum and the only source of roundoff is the fllog.  The first formula is
+                       ;; more accurate than the second for 1e-9 < abs-y < 1e-8.
+
+                       ;; For the other case, we rewrite Kahan's formula to have only two sources of roundoff,
+                       ;; with the flexpt and the fllog1p
+
+                       (if (##fl< abs-y 1e-8)
+                           (##fl* (macro-inexact--1/2) (##fllog (##fl* (macro-inexact-+1/2) abs-y)))
                            (##fl* (macro-inexact-+1/4) (##fllog1p (##flexpt (##fl* (macro-inexact-+1/2) abs-y) -2.))))
+
                        (##fl* (##flcopysign (##fl+ (macro-inexact-+pi/2)
-                                                   (##flatan (##fl/ abs-y
-                                                                    (macro-inexact-+2))))
+                                                   (##flatan (##fl* abs-y (macro-inexact-+1/2))))
                                             inexact-y)
                               (macro-inexact-+1/2))))
                      (else
