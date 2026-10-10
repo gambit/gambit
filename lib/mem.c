@@ -6246,7 +6246,12 @@ ___PSDKR)
 
   alloc_stack_ptr = p2;
 
-  ___FP_SET_STK(alloc_stack_ptr,
+  /*
+   * The copied first break frame is at stack_break; alloc_stack_ptr now
+   * points to the copied current frame.
+   */
+
+  ___FP_SET_STK(___ps->stack_break,
                 -___FIRST_BREAK_FRAME_STACK_MSECTION,
                 ___CAST(___WORD,
                         ___CAST(___msection*,NULL))) /* not a stack section overflow */
@@ -7235,6 +7240,13 @@ ___PSDKR)
        */
 
       ___FP_ADJFP(alloc_stack_ptr,___FIRST_BREAK_FRAME_SPACE)
+
+      /* The field is only non-NULL for a real stack section overflow. */
+
+      ___FP_SET_STK(alloc_stack_ptr,
+                    -___FIRST_BREAK_FRAME_STACK_MSECTION,
+                    ___CAST(___WORD,
+                            ___CAST(___msection*,NULL)))
 
       /*
        * Because ___stack_limit is only called by the stack-limit
