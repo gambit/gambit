@@ -6301,7 +6301,18 @@ ___TICKETLOCK_UNLOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,ob
 #endif
 
 
+/* Overflow undo may reuse the previous section only while its frames remain
+   private to the current continuation.  Capturing a continuation or replacing
+   a break frame's NEXT link invalidates that ownership.  Clear the first
+   break's eligibility even when stack_break points to a nested break frame;
+   the normal break handler will copy frames when undo is no longer safe. */
+
+#define ___INVALIDATE_STACK_OVERFLOW_UNDO \
+___FP_SET_STK((___ps->stack_start - ___FIRST_BREAK_FRAME_SPACE), \
+             -___FIRST_BREAK_FRAME_STACK_MSECTION,0)
+
 #define ___THREAD_SAVE \
+___INVALIDATE_STACK_OVERFLOW_UNDO \
 if (___R0 == ___ps->handler_break) \
   frame = ___STK(-___BREAK_FRAME_NEXT); \
 else \
@@ -6365,6 +6376,7 @@ ___CONTINUATION_FRAME_FIELD(___THREAD_CONT_FIELD(thread)) = frame;
 
 #define ___THREAD_RESTORE \
 { ___SCMOBJ cont = ___THREAD_CONT_FIELD(thread); \
+  ___INVALIDATE_STACK_OVERFLOW_UNDO \
   ___SET_FP(___ps->stack_break) \
   ___SET_STK(-___BREAK_FRAME_NEXT,___CONTINUATION_FRAME_FIELD(cont)) \
   ___CONTINUATION_FRAME_FIELD(cont) = ___END_OF_CONT_MARKER; \
@@ -6575,6 +6587,7 @@ if (___fp != ___ps->stack_break) \
 : ___ps->handler_break)
 
 #define ___CONTINUATION_CAPTURE \
+___INVALIDATE_STACK_OVERFLOW_UNDO \
 if (___R0 == ___ps->handler_break) \
   frame = ___STK(-___BREAK_FRAME_NEXT); \
 else \
@@ -6639,6 +6652,7 @@ ___ps->stack_break = ___fp;
 }
 
 #define ___CONTINUATION_GRAFT_NO_WINDING \
+___INVALIDATE_STACK_OVERFLOW_UNDO \
 ___SET_FP(___ps->stack_break) \
 ___SET_STK(-___BREAK_FRAME_NEXT,___CONTINUATION_FRAME_FIELD(cont)) \
 temp = ___CONTINUATION_DENV_FIELD(cont); \
@@ -6706,6 +6720,7 @@ ___SET_R0(___ps->handler_break)
   ___SCMOBJ thread; \
   ___POP_ARGS2(cont,result) \
   ___SET_R1(result) \
+  ___INVALIDATE_STACK_OVERFLOW_UNDO \
   ___SET_FP(___ps->stack_break) \
   ___SET_STK(-___BREAK_FRAME_NEXT,___CONTINUATION_FRAME_FIELD(cont)) \
   temp = ___CONTINUATION_DENV_FIELD(cont); \
