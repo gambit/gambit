@@ -1352,7 +1352,11 @@
    (lambda (interrupt)
 
      (let ((thread (macro-mutex-specific (##vector-ref interrupt 1))))
-       (if (##not (macro-terminated-thread-given-initialized? thread))
+       (if (macro-terminated-thread-given-initialized? thread)
+
+           ;; The target may end after the initial interruptability check.
+           ;; The helper still holds its lock on this path.
+           (macro-unlock-thread! thread)
 
            (let ((last-processor (macro-thread-last-processor thread)))
              (macro-lock-processor! last-processor)
