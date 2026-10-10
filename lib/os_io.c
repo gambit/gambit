@@ -4750,7 +4750,7 @@ typedef struct ___device_tcp_client_struct
   {
     ___device_stream base;
     SOCKET_TYPE s;
-    struct sockaddr addr;
+    struct sockaddr_storage addr;
     SOCKET_LEN_TYPE addrlen;
     int try_connect_again;
     int connect_done;
@@ -4796,7 +4796,7 @@ ___HIDDEN int try_connect
 ___device_tcp_client *dev;)
 {
   if (!SOCKET_CALL_ERROR(connect (dev->s,
-                                  &dev->addr,
+                                  ___CAST(struct sockaddr*,&dev->addr),
                                   dev->addrlen)) ||
       CONNECT_IN_PROGRESS || /* establishing connection in background */
       dev->try_connect_again == 2) /* last connect attempt? */
@@ -5643,7 +5643,8 @@ int io_settings)
 
   d->base.base.vtbl = &___device_tcp_client_table;
   d->s = s;
-  d->addr = *addr;
+  memset (&d->addr, 0, sizeof (d->addr));
+  memcpy (&d->addr, addr, addrlen);
   d->addrlen = addrlen;
   d->try_connect_again = try_connect_again;
   d->connect_done = 0;
@@ -6076,7 +6077,7 @@ ___device_group *dgroup;
 ___device_tcp_client **client;)
 {
   ___SCMOBJ e;
-  struct sockaddr_in addr;
+  struct sockaddr_storage addr;
   SOCKET_LEN_TYPE addrlen;
   SOCKET_TYPE s;
 
@@ -6138,10 +6139,10 @@ typedef struct ___device_udp_struct
     ___device base;
     SOCKET_TYPE s;
 
-    struct sockaddr dest_sa;
+    struct sockaddr_storage dest_sa;
     SOCKET_LEN_TYPE dest_salen; /* 0 when no destination yet set */
 
-    struct sockaddr source_sa;
+    struct sockaddr_storage source_sa;
     SOCKET_LEN_TYPE source_salen; /* 0 when no message yet received */
     ___BOOL source_same_as_previous; /* true when source_sa contains latest address read by ___os_device_udp_socket_info */
 
@@ -6509,19 +6510,27 @@ ___SSIZE_T *len_done;)
 #else
 
   ___SSIZE_T n;
-  struct sockaddr sa;
+  struct sockaddr_storage sa;
   SOCKET_LEN_TYPE salen = sizeof (sa);
 
   if (self->base.read_stage != ___STAGE_OPEN)
     return ___FIX(___CLOSED_DEVICE_ERR);
 
-  n = recvfrom (self->s, buf, len, 0, &sa, &salen);
+  n = recvfrom (self->s,
+                buf,
+                len,
+                0,
+                ___CAST(struct sockaddr*,&sa),
+                &salen);
 
   if (n < 0)
     return ERR_CODE_FROM_SOCKET_CALL;
 
   if (!self->source_same_as_previous ||
-      !sockaddr_equal (&sa, salen, &self->source_sa, self->source_salen))
+      !sockaddr_equal (___CAST(struct sockaddr*,&sa),
+                       salen,
+                       ___CAST(struct sockaddr*,&self->source_sa),
+                       self->source_salen))
     {
       self->source_sa = sa;
       self->source_salen = salen;
@@ -6561,7 +6570,12 @@ ___SSIZE_T *len_done;)
   if (self->base.write_stage != ___STAGE_OPEN)
     return ___FIX(___CLOSED_DEVICE_ERR);
 
-  n = sendto (self->s, buf, len, 0, &self->dest_sa, self->dest_salen);
+  n = sendto (self->s,
+              buf,
+              len,
+              0,
+              ___CAST(struct sockaddr*,&self->dest_sa),
+              self->dest_salen);
 
   /*
    * Note that some operating systems limit the size of datagrams sent.
@@ -10674,26 +10688,44 @@ ___SCMOBJ server_name;)
   ___SCMOBJ e;
   ___device_tcp_client *dev;
   ___SCMOBJ result;
-  struct sockaddr local_sa;
+  struct sockaddr_storage local_sa;
   SOCKET_LEN_TYPE local_salen;
-  struct sockaddr sa;
+  struct sockaddr_storage sa;
   SOCKET_LEN_TYPE salen;
   ___tls_context *tls_context_p;
   char *server_name_p;
 
   if ((e = ___SCMOBJ_to_sockaddr (local_addr,
                                   local_port_num,
-                                  &local_sa,
+                                  ___CAST(struct sockaddr*,&local_sa),
                                   &local_salen,
                                   1))
       != ___FIX(___NO_ERR) ||
       (e = ___SCMOBJ_to_sockaddr (addr,
                                   port_num,
-                                  &sa,
+                                  ___CAST(struct sockaddr*,&sa),
                                   &salen,
                                   2))
       != ___FIX(___NO_ERR))
     return e;
+
+#ifdef USE_IPV6
+
+  if (local_addr == ___FAL &&
+      ___CAST(struct sockaddr*,&sa)->sa_family == AF_INET6)
+    {
+      unsigned short local_port =
+        ___CAST(struct sockaddr_in*,&local_sa)->sin_port;
+      struct sockaddr_in6 *local_sa_in6 =
+        ___CAST(struct sockaddr_in6*,&local_sa);
+
+      local_salen = sizeof (*local_sa_in6);
+      memset (local_sa_in6, 0, sizeof (*local_sa_in6));
+      local_sa_in6->sin6_family = AF_INET6;
+      local_sa_in6->sin6_port = local_port;
+    }
+
+#endif
 
 #ifdef USE_OPENSSL
 
@@ -10740,9 +10772,9 @@ ___SCMOBJ server_name;)
   e = ___device_tcp_client_setup_from_sockaddr
         (&dev,
          ___global_device_group (),
-         &sa,
+         ___CAST(struct sockaddr*,&sa),
          salen,
-         &local_sa,
+         ___CAST(struct sockaddr*,&local_sa),
          local_salen,
          ___INT(options),
          ___DIRECTION_RD|___DIRECTION_WR,
@@ -10790,7 +10822,7 @@ ___SCMOBJ peer;)
 
   ___device_tcp_client *d =
     ___CAST(___device_tcp_client*,___FOREIGN_PTR_FIELD(dev));
-  struct sockaddr sa;
+  struct sockaddr_storage sa;
   SOCKET_LEN_TYPE salen;
 
   if (d->base.base.read_stage != ___STAGE_OPEN &&
@@ -10811,8 +10843,8 @@ ___SCMOBJ peer;)
   salen = sizeof (sa);
 
   if (((peer == ___FAL)
-       ? getsockname (d->s, &sa, &salen)
-       : getpeername (d->s, &sa, &salen)) < 0)
+       ? getsockname (d->s, ___CAST(struct sockaddr*,&sa), &salen)
+       : getpeername (d->s, ___CAST(struct sockaddr*,&sa), &salen)) < 0)
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
       if (NOT_CONNECTED(e) && !d->connect_done)
@@ -10820,7 +10852,10 @@ ___SCMOBJ peer;)
       return e;
     }
 
-  return ___release_scmobj (___sockaddr_to_SCMOBJ (&sa, salen, ___RETURN_POS));
+  return ___release_scmobj
+           (___sockaddr_to_SCMOBJ (___CAST(struct sockaddr*,&sa),
+                                   salen,
+                                   ___RETURN_POS));
 
 #endif
 }
@@ -10856,13 +10891,13 @@ ___SCMOBJ tls_context;)
   ___SCMOBJ e;
   ___device_tcp_server *dev = 0;
   ___SCMOBJ result;
-  struct sockaddr local_sa;
+  struct sockaddr_storage local_sa;
   SOCKET_LEN_TYPE local_salen;
   ___tls_context *tls_context_p;
 
   if ((e = ___SCMOBJ_to_sockaddr (local_addr,
                                   local_port_num,
-                                  &local_sa,
+                                  ___CAST(struct sockaddr*,&local_sa),
                                   &local_salen,
                                   1))
       != ___FIX(___NO_ERR))
@@ -10898,7 +10933,7 @@ ___SCMOBJ tls_context;)
   e = ___device_tcp_server_setup
         (&dev,
          ___global_device_group (),
-         &local_sa,
+         ___CAST(struct sockaddr*,&local_sa),
          local_salen,
          ___INT(backlog),
          ___INT(options),
@@ -10982,17 +11017,20 @@ ___SCMOBJ dev;)
 
   ___device_tcp_server *d =
     ___CAST(___device_tcp_server*,___FOREIGN_PTR_FIELD(dev));
-  struct sockaddr sa;
+  struct sockaddr_storage sa;
   SOCKET_LEN_TYPE salen = sizeof (sa);
 
   if (d->base.read_stage != ___STAGE_OPEN &&
       d->base.write_stage != ___STAGE_OPEN)
     return ___FIX(___CLOSED_DEVICE_ERR);
 
-  if (getsockname (d->s, &sa, &salen) < 0)
+  if (getsockname (d->s, ___CAST(struct sockaddr*,&sa), &salen) < 0)
     return ERR_CODE_FROM_SOCKET_CALL;
 
-  return ___release_scmobj (___sockaddr_to_SCMOBJ (&sa, salen, ___RETURN_POS));
+  return ___release_scmobj
+           (___sockaddr_to_SCMOBJ (___CAST(struct sockaddr*,&sa),
+                                   salen,
+                                   ___RETURN_POS));
 
 #endif
 }
@@ -11022,12 +11060,12 @@ ___SCMOBJ options;)
   ___SCMOBJ e;
   ___device_udp *dev;
   ___SCMOBJ result;
-  struct sockaddr local_sa;
+  struct sockaddr_storage local_sa;
   SOCKET_LEN_TYPE local_salen;
 
   if ((e = ___SCMOBJ_to_sockaddr (local_addr,
                                   local_port_num,
-                                  &local_sa,
+                                  ___CAST(struct sockaddr*,&local_sa),
                                   &local_salen,
                                   1))
       != ___FIX(___NO_ERR))
@@ -11036,7 +11074,7 @@ ___SCMOBJ options;)
   if ((e = ___device_udp_setup_from_sockaddr
              (&dev,
               ___global_device_group (),
-              &local_sa,
+              ___CAST(struct sockaddr*,&local_sa),
               local_salen,
               ___INT(options),
               ___DIRECTION_RD|___DIRECTION_WR))
@@ -11205,15 +11243,16 @@ ___SCMOBJ source;)
 
   if (source == ___FAL)
     {
-      struct sockaddr sa;
+      struct sockaddr_storage sa;
       SOCKET_LEN_TYPE salen = sizeof (sa);
 
-      if (getsockname (d->s, &sa, &salen) < 0)
+      if (getsockname (d->s, ___CAST(struct sockaddr*,&sa), &salen) < 0)
         return ERR_CODE_FROM_SOCKET_CALL;
 
-      return ___release_scmobj (___sockaddr_to_SCMOBJ (&sa,
-                                                       salen,
-                                                       ___RETURN_POS));
+      return ___release_scmobj
+               (___sockaddr_to_SCMOBJ (___CAST(struct sockaddr*,&sa),
+                                       salen,
+                                       ___RETURN_POS));
     }
   else
     {
@@ -11225,9 +11264,11 @@ ___SCMOBJ source;)
 
       d->source_same_as_previous = 1;
 
-      return ___release_scmobj (___sockaddr_to_SCMOBJ (&d->source_sa,
-                                                       d->source_salen,
-                                                       ___RETURN_POS));
+      return ___release_scmobj
+               (___sockaddr_to_SCMOBJ
+                  (___CAST(struct sockaddr*,&d->source_sa),
+                   d->source_salen,
+                   ___RETURN_POS));
     }
 
 #endif
@@ -11262,7 +11303,7 @@ ___SCMOBJ port_num;)
 
   if ((e = ___SCMOBJ_to_sockaddr (addr,
                                   port_num,
-                                  &d->dest_sa,
+                                  ___CAST(struct sockaddr*,&d->dest_sa),
                                   &d->dest_salen,
                                   1)) /* argument 1 of udp-destination-set! */
       != ___FIX(___NO_ERR))
