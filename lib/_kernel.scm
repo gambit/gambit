@@ -1858,30 +1858,57 @@ end-of-code
 
 ;;; Implementation of promises.
 
+;; State updates can link two promises, so use one VM-local lock for these
+;; short transitions. Never hold it while evaluating a delayed expression.
+(cond-expand
+ (enable-smp
+  (define-type promise-state-lock
+    id: 13b4ef22-61a7-4aa0-871a-315378451e1f
+    constructor: macro-make-promise-state-lock
+    macros:
+    opaque:
+    (next-ticket init: 0)
+    (current-ticket init: 0))
+  (define ##promise-state-lock (macro-make-promise-state-lock))
+  (define-macro (macro-lock-promise-states!)
+    `(##primitive-lock! ##promise-state-lock 1 2))
+  (define-macro (macro-unlock-promise-states!)
+    `(##primitive-unlock! ##promise-state-lock 1 2)))
+ (else
+  (define-macro (macro-lock-promise-states!) `(##void))
+  (define-macro (macro-unlock-promise-states!) `(##void))))
+
 (define-prim (##force-out-of-line promise)
 
   (declare (not interrupts-enabled))
 
   (define-macro (macro-reentrant-semantics? state) #t)
 
+  (define-macro (macro-unlock-and-return value)
+    `(let ((result ,value))
+       (macro-unlock-promise-states!)
+       result))
+
   (define (nonreentrant-undetermined-case promise)
+    (macro-unlock-promise-states!)
     (error "Attempt to reenter nonreentrant promise" promise))
 
   (define (chase promise thunk)
-    (let ((result1 ;; compute promise's value by calling thunk
+    (let ((result1 ;; compute promise's value without holding the state lock
            (let ()
              (declare (interrupts-enabled))
              (thunk))))
+      (macro-lock-promise-states!)
       (let ((state1 (##promise-state promise)))
         (cond ((and (macro-reentrant-semantics? state1)
                     (##not (##eq? state1 ;; is it determined now?
                                   (##vector-ref state1 0))))
-               (##vector-ref state1 0)) ;; ignore thunk's result
+               (macro-unlock-and-return (##vector-ref state1 0)))
               ((##not (##promise? result1))
                (##vector-set! state1 0 result1) ;; cache promise's value
                (if (macro-reentrant-semantics? state1)
                    (##vector-set! state1 1 #f))
-               result1)
+               (macro-unlock-and-return result1))
               (else
                ;; result1 is a promise, so we need to force it
                (let* ((state2 (##promise-state result1))
@@ -1890,12 +1917,13 @@ end-of-code
                         (##vector-set! state1 0 result2) ;; cache promise's value
                         (if (macro-reentrant-semantics? state1)
                             (##vector-set! state1 1 #f))
-                        result2)
+                        (macro-unlock-and-return result2))
                        (else
                         (let ((t (##vector-ref state2 1)))
                           (##promise-state-set! result1 state1) ;; link states
                           (cond ((macro-reentrant-semantics? state2)
                                  (##vector-set! state1 1 t)
+                                 (macro-unlock-promise-states!)
                                  (chase promise t))
                                 ((##not t)
                                  (nonreentrant-undetermined-case promise))
@@ -1903,19 +1931,23 @@ end-of-code
                                  ;; avoid space leak through thunk
                                  (if (macro-reentrant-semantics? state2)
                                      (##vector-set! state2 1 #f))
+                                 (macro-unlock-promise-states!)
                                  (chase promise t))))))))))))
 
+  (macro-lock-promise-states!)
   (let ((state (##promise-state promise)))
     (if (##not (##eq? state (##vector-ref state 0))) ;; is promise determined?
-        (##vector-ref state 0) ;; return cached value
+        (macro-unlock-and-return (##vector-ref state 0))
         (let ((thunk (##vector-ref state 1)))
           (cond ((macro-reentrant-semantics? state)
+                 (macro-unlock-promise-states!)
                  (chase promise thunk))
                 ((##not thunk)
                  (nonreentrant-undetermined-case promise))
                 (else
                  ;; avoid space leak through thunk
                  (##vector-set! state 1 #f)
+                 (macro-unlock-promise-states!)
                  (chase promise thunk)))))))
 
 ;;;----------------------------------------------------------------------------
