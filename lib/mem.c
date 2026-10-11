@@ -5722,7 +5722,20 @@ ___PSDKR)
 
       if (!___FIXZEROP(___FIXAND(___FIX(flags),
                                  ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
-        gc_hash_table_rehash_in_situ (___SUBTYPED_FROM_BODY(body));
+        {
+          if (flags & ___GCHASHTABLE_FLAG_SCHEME_HASHED)
+            {
+              /*
+               * The Scheme-side hash function determines placement.
+               * Preserve entries and request Scheme-side reinsertion.
+               */
+              flags &= ~___GCHASHTABLE_FLAG_KEY_MOVED;
+              body[___GCHASHTABLE_FLAGS] = ___FIX(flags);
+            }
+          else
+            gc_hash_table_rehash_in_situ
+              (___SUBTYPED_FROM_BODY(body));
+        }
 
 #endif
     }
@@ -6183,6 +6196,38 @@ ___SCMOBJ ht_dst;)
   ___SIZE_TS words = ___HD_WORDS(body_src[-1]);
   int size2 = words - ___GCHASHTABLE_KEY0;
   int i;
+
+  if (___EQP(ht_src, ht_dst))
+    {
+      ___BOOL mem_alloc_keys =
+        !___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
+                                ___FIX(___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)));
+
+      /*
+       * The in-place GC rehasher requires uniformly allocated or
+       * nonallocated keys.  General Scheme tables can mix both kinds;
+       * their NEED_REHASH flag lets table-access rebuild them using
+       * the table's own hash function instead.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___SCMOBJ key = body_src[i+___GCHASHTABLE_KEY0];
+
+          if (key != ___UNUSED &&
+              key != ___DELETED &&
+              (!!___MEM_ALLOCATED(key) != mem_alloc_keys))
+            {
+              body_src[___GCHASHTABLE_FLAGS] =
+                ___FIXAND(body_src[___GCHASHTABLE_FLAGS],
+                          ___FIXNOT(___FIX(___GCHASHTABLE_FLAG_KEY_MOVED)));
+              return ht_dst;
+            }
+        }
+
+      gc_hash_table_rehash_in_situ (ht_src);
+      return ht_dst;
+    }
 
   if (___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
                             ___FIX(___GCHASHTABLE_FLAG_UNION_FIND))))

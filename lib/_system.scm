@@ -2047,7 +2047,11 @@ end-of-code
                  n
                  (##fxior
                   (macro-gc-hash-table-flag-mem-alloc-keys)
-                  (macro-table-flags table))
+                  (##fxior
+                    (macro-table-flags table)
+                    (if (macro-table-test table)
+                        (macro-gc-hash-table-flag-scheme-hashed)
+                        0)))
                  (macro-table-loads table))))
           (macro-table-gcht-set! table gcht)
           gcht)
@@ -4368,16 +4372,30 @@ end-of-code
                                (deserialize-nonneg-fixnum! 0 0)))))
                     (deserialize-subprocedure-with-id! subproc-id)))
 
-                 ((fx>= x (structure-tag))
-                  (deserialize-vector-like!
-                   x
-                   (lambda (len)
-                     (##make-structure
-                      (macro-type-partially-initialized-structure)
-                      len))
-                   (lambda (obj i val)
-                     (##unchecked-structure-set! obj val i #f #f))))
-
+                  ((fx>= x (structure-tag))
+                   (let ((obj
+                          (deserialize-vector-like!
+                           x
+                           (lambda (len)
+                             (##make-structure
+                              (macro-type-partially-initialized-structure)
+                              len))
+                           (lambda (obj i val)
+                             (##unchecked-structure-set! obj val i #f #f)))))
+                     ;; Classify the completed Scheme-hashed table's GC object.
+                     ;; Do not add the bit to macro-table-flags (observable).
+                     ;; NOTE: not safe against GC during the preceding decode
+                     ;; without separate verification and potentially more work.
+                     (if (##table? obj)
+                         (let ((gcht (macro-table-gcht obj)))
+                           (if (and (macro-table-test obj)
+                                    (##gc-hash-table? gcht))
+                               (macro-gc-hash-table-flags-set!
+                                gcht
+                                (##fxior
+                                 (macro-gc-hash-table-flags gcht)
+                                 (macro-gc-hash-table-flag-scheme-hashed))))))
+                     obj))
                  ((fx>= x (vector-tag))
                   (deserialize-vector-like!
                    x
