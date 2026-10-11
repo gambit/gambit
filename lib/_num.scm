@@ -2944,17 +2944,30 @@ for a discussion of branch cuts.
                        ;; (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
                        ;;                 (##flsqrt abs-y)))
 
-                       ;; When abs-y < 1e-8, then (##fl+ (macro-inexact-+4) (##flsquare abs-y)) is 4., so we
-                       ;; rewrite it as the first branch.  We avoid underflow except when abs-y is the smallest
-                       ;; positive flonum and the only source of roundoff is the fllog.  The first formula is
-                       ;; more accurate than the second for 1e-9 < abs-y < 1e-8.
-
-                       ;; For the other case, we rewrite Kahan's formula to have only two sources of roundoff,
+                       ;; First we rewrite Kahan's formula to have only two sources of roundoff,
                        ;; with the flexpt and the fllog1p
 
-                       (if (##fl< abs-y 1e-8)
-                           (##fl* (macro-inexact--1/2) (##fllog (##fl* (macro-inexact-+1/2) abs-y)))
-                           (##fl* (macro-inexact-+1/4) (##fllog1p (##flexpt (##fl* (macro-inexact-+1/2) abs-y) -2.))))
+                       ;; When abs-y < 1e-8, then (##fl+ (macro-inexact-+4) (##flsquare abs-y)) is 4., so we
+                       ;; rewrite it as the second branch.  When abs-y is not submornal then
+                       ;; the only source of roundoff is the fllog.
+
+                       ;; Finally, when abs-y is subnormal then multiplying by 1/2 can lead to large
+                       ;; (relative) roundoff when the mantissa is odd; on the other hand, adding (log 1/2)
+                       ;; can add another roundoff error. So we add (log 1/2) when there are < about
+                       ;; 45 significant bits in the mantissa.
+
+                       (cond ((##fl<= 1e-8 abs-y)
+                              (##fl* (macro-inexact-+1/4)
+                                     (##fllog1p (##flexpt (##fl* (macro-inexact-+1/2) abs-y) -2.))))
+                             ((##fl<= (##fl* (##flexpt 2. 45.)
+                                             (macro-flonum-min-normal))
+                                      abs-y)
+                              (##fl* (macro-inexact--1/2)
+                                     (##fllog (##fl* (macro-inexact-+1/2) abs-y))))
+                             (else
+                              (##fl* (macro-inexact--1/2)
+                                     (##fl+ (##fllog abs-y)
+                                            (##fllog (macro-inexact-+1/2))))))
 
                        (##fl* (##flcopysign (##fl+ (macro-inexact-+pi/2)
                                                    (##flatan (##fl* abs-y (macro-inexact-+1/2))))

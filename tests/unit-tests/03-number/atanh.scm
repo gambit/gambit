@@ -27,6 +27,11 @@
 (test-approximate (test-atanh 1.0+1e-9i) (atanh 1.0+1e-9i) 1e-12)
 (test-approximate (test-atanh 1.0+i) (atanh 1.0+i) 1e-12)
 
+;;; Tests adapted from https://github.com/racket/math/issues/119#issuecomment-6112017646
+
+(test-approximate 372.5666095509706 (real-part (atanh 1.0+5e-324i)) 1e-12)
+(test-approximate 372.01730340663653 (real-part (atanh 1.0+1.5e-323i)) 1e-12)
+
 ;; test-atanh is not correct for 1.+0.i
 (test-approximate (test-atanh 1-0.i) (atanh 1-0.i) 1e-12)
 ;; test-atanh is not correct for 1.-0.i
