@@ -6184,6 +6184,38 @@ ___SCMOBJ ht_dst;)
   int size2 = words - ___GCHASHTABLE_KEY0;
   int i;
 
+  if (___EQP(ht_src, ht_dst))
+    {
+      ___BOOL mem_alloc_keys =
+        !___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
+                                ___FIX(___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)));
+
+      /*
+       * The in-place GC rehasher requires uniformly allocated or
+       * nonallocated keys.  General Scheme tables can mix both kinds;
+       * their NEED_REHASH flag lets table-access rebuild them using
+       * the table's own hash function instead.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___SCMOBJ key = body_src[i+___GCHASHTABLE_KEY0];
+
+          if (key != ___UNUSED &&
+              key != ___DELETED &&
+              (!!___MEM_ALLOCATED(key) != mem_alloc_keys))
+            {
+              body_src[___GCHASHTABLE_FLAGS] =
+                ___FIXAND(body_src[___GCHASHTABLE_FLAGS],
+                          ___FIXNOT(___FIX(___GCHASHTABLE_FLAG_KEY_MOVED)));
+              return ht_dst;
+            }
+        }
+
+      gc_hash_table_rehash_in_situ (ht_src);
+      return ht_dst;
+    }
+
   if (___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
                             ___FIX(___GCHASHTABLE_FLAG_UNION_FIND))))
     {
