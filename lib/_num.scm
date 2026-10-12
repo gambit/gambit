@@ -2964,8 +2964,7 @@ for a discussion of branch cuts.
                                   (##fllog1p (##flexpt half-abs-y -2.))))
                           ((or
                             ;; normal and large subnormals
-                            (##fl<= (##fl* (##flexpt 2. 45.)
-                                           (macro-flonum-min-normal))
+                            (##fl<= (##flexpt (macro-inexact-+2) (##fx+ (macro-flonum-e-min) 45))
                                     abs-y)
                             ;; subnormals with even mantissas
                             (##fl= abs-y (##fl* half-abs-y (macro-inexact-+2))))
