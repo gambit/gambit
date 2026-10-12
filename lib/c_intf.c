@@ -6521,13 +6521,15 @@ ___SCMOBJ proc_or_false;)
 {
   ___SCMOBJ stack_marker;
 
+  ___GC_SAVE1(___ps, proc_or_false);
+
 #ifdef ___SINGLE_THREADED_VMS
   stack_marker = ___make_vector (___ps, 1, ___FAL);
 #else
   stack_marker = ___make_vector (___ps, 2, ___FAL);
 #endif
 
-  /*TODO: proc_or_false may have been GC'd at this point! protect it some way*/
+  ___GC_RESTORE1(___ps, proc_or_false);
 
   if (___FIXNUMP(stack_marker))
     return ___FIX(___SFUN_HEAP_OVERFLOW_ERR);
