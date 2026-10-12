@@ -4328,22 +4328,34 @@
 (define-prim (##tgroup->thread-vector tgroup)
   (##declare (not interrupts-enabled))
   (let ((deq tgroup))
-    (let loop1 ((probe deq) (n 0))
-      (let ((next (macro-tgroup-threads-deq-next probe)))
-        (if (##not (##eq? next deq))
-            (loop1 next (##fx+ n 1))
-            (let ((v (##make-vector n)))
-              (let loop2 ((probe deq) (i 0))
-                (let ((next (macro-tgroup-threads-deq-next probe)))
-                  (if (##not (##eq? next deq))
-                      (if (##fx= i n) ;; more elements this time around?
-                          (loop1 next (##fx+ i 1))
-                          (begin
-                            (##vector-set! v i next)
-                            (loop2 next (##fx+ i 1))))
-                      (begin
-                        (##vector-shrink! v i) ;; there may be fewer elements!
-                        v))))))))))
+    (let retry ()
+      ;; A terminating thread is unlinked and its deque links are reset to
+      ;; itself.  Both traversals must therefore exclude group mutations.
+      (macro-lock-tgroup! tgroup)
+      (let count ((probe deq) (n 0))
+        (let ((next (macro-tgroup-threads-deq-next probe)))
+          (if (##not (##eq? next deq))
+              (count next (##fx+ n 1))
+              (begin
+                ;; Allocation may trigger GC, so release the low-level lock.
+                (macro-unlock-tgroup! tgroup)
+                (let ((v (##make-vector n)))
+                  (macro-lock-tgroup! tgroup)
+                  (let fill ((probe deq) (i 0))
+                    (let ((next (macro-tgroup-threads-deq-next probe)))
+                      (cond ((##eq? next deq)
+                             (macro-unlock-tgroup! tgroup)
+                             (##vector-shrink! v i)
+                             v)
+                            ((##fx= i n)
+                             ;; The group grew while allocating the vector.
+                             ;; Restart at the group, not at a thread that
+                             ;; can be unlinked once the lock is released.
+                             (macro-unlock-tgroup! tgroup)
+                             (retry))
+                            (else
+                             (##vector-set! v i next)
+                             (fill next (##fx+ i 1))))))))))))))
 
 (define-prim (##tgroup->thread-list tgroup)
   (##declare (not interrupts-enabled))
