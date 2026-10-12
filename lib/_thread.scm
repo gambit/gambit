@@ -3258,10 +3258,18 @@
   (##declare (not interrupts-enabled))
   (or (macro-thread-mailbox thread)
       (let ((mb (macro-make-mailbox)))
-        (or (macro-thread-mailbox thread)
-            (begin
-              (macro-thread-mailbox-set! thread mb)
-              mb)))))
+        ;; Multiple senders can concurrently initialize a thread's mailbox.
+        ;; Serialize the final check and installation so every sender uses the
+        ;; same mailbox.  Allocate before taking the low-level lock because a
+        ;; garbage collection must not occur while that lock is held.
+        (macro-lock-thread! thread)
+        (let ((result
+               (or (macro-thread-mailbox thread)
+                   (begin
+                     (macro-thread-mailbox-set! thread mb)
+                     mb))))
+          (macro-unlock-thread! thread)
+          result))))
 
 (define-prim (##thread-mailbox-rewind)
   (##declare (not interrupts-enabled))
@@ -3276,16 +3284,21 @@
   (##declare (not interrupts-enabled))
   (let* ((mb
           (##thread-mailbox-get! (macro-current-thread)))
-         (cursor
-          (macro-mailbox-cursor mb)))
-    (if cursor
-      (let* ((next (macro-fifo-next cursor))
-             (next2 (macro-fifo-next next)))
-        (macro-fifo-next-set! cursor next2)
-        (if (##not (##pair? next2))
-          (macro-fifo-tail-set! (macro-mailbox-fifo mb) cursor))
-        (macro-mailbox-cursor-set! mb #f)))
-    (##void)))
+         (mutex
+          (macro-mailbox-mutex mb)))
+    (macro-mutex-lock! mutex #f (macro-current-thread))
+    (let ((cursor (macro-mailbox-cursor mb)))
+      (if cursor
+        (let* ((next (macro-fifo-next cursor))
+               (next2 (macro-fifo-next next)))
+          (macro-fifo-next-set! cursor next2)
+          (if (##not (##pair? next2))
+            (macro-fifo-tail-set! (macro-mailbox-fifo mb) cursor))
+          (macro-mailbox-cursor-set! mb #f))))
+    (macro-mutex-unlock! mutex)
+    (let ()
+      (declare (interrupts-enabled))
+      (##void))))
 
 (define-prim (thread-mailbox-extract-and-rewind)
   (##thread-mailbox-extract-and-rewind))
@@ -3296,69 +3309,52 @@
               absrel-timeout
               timeout-val)
   (##declare (not interrupts-enabled))
-  (let* ((mb
-          (##thread-mailbox-get! (macro-current-thread)))
-         (cursor
-          (macro-mailbox-cursor mb))
-         (next
-          (if cursor
-            (macro-fifo-next cursor)
-            (macro-mailbox-fifo mb)))
-         (next2
-          (macro-fifo-next next)))
-    (if (##pair? next2)
-      (let ((result (macro-fifo-elem next2)))
-        (if extract-and-rewind?
-          (let ((next3 (macro-fifo-next next2)))
-            (macro-fifo-next-set! next next3)
-            (if (##not (##pair? next3))
-              (macro-fifo-tail-set! (macro-mailbox-fifo mb) next))
-            (macro-mailbox-cursor-set! mb #f))
-          (macro-mailbox-cursor-set! mb next))
-        result)
-      (let ((timeout
-             (##absrel-timeout->timeout
-              (if (##eq? absrel-timeout (macro-absent-obj))
-                #f
-                absrel-timeout))))
-        (let loop ()
-          (let* ((mb
-                  (##thread-mailbox-get! (macro-current-thread)))
-                 (mutex
-                  (macro-mailbox-mutex mb)))
-            (macro-mutex-lock! mutex #f (macro-current-thread))
-            (let* ((cursor
-                    (macro-mailbox-cursor mb))
-                   (next
-                    (if cursor
-                      (macro-fifo-next cursor)
-                      (macro-mailbox-fifo mb)))
-                   (next2
-                    (macro-fifo-next next)))
-              (if (##pair? next2)
-                (let ((result (macro-fifo-elem next2)))
-                  (if extract-and-rewind?
-                    (let ((next3 (macro-fifo-next next2)))
-                      (macro-fifo-next-set! next next3)
-                      (if (##not (##pair? next3))
-                        (macro-fifo-tail-set! (macro-mailbox-fifo mb) next))
-                      (macro-mailbox-cursor-set! mb #f))
-                    (macro-mailbox-cursor-set! mb next))
-                  (macro-mutex-unlock! mutex)
-                  (let ()
-                    (declare (interrupts-enabled))
-                    result))
-                (if (##mutex-signal-and-condvar-wait!
-                     mutex
-                     (macro-mailbox-condvar mb)
-                     timeout)
-                  (loop)
-                  (if (##eq? timeout-val (macro-absent-obj))
-                    (##raise-mailbox-receive-timeout-exception
-                     prim
-                     absrel-timeout
-                     timeout-val)
-                    timeout-val))))))))))
+  (let ((timeout
+         (##absrel-timeout->timeout
+          (if (##eq? absrel-timeout (macro-absent-obj))
+            #f
+            absrel-timeout))))
+    (let loop ()
+      (let* ((mb
+              (##thread-mailbox-get! (macro-current-thread)))
+             (mutex
+              (macro-mailbox-mutex mb)))
+        ;; Senders update the same FIFO while holding this mutex.  The old
+        ;; nonempty fast path skipped the mutex, so a receive racing the final
+        ;; link/tail updates of thread-send could detach messages.
+        (macro-mutex-lock! mutex #f (macro-current-thread))
+        (let* ((cursor
+                (macro-mailbox-cursor mb))
+               (next
+                (if cursor
+                  (macro-fifo-next cursor)
+                  (macro-mailbox-fifo mb)))
+               (next2
+                (macro-fifo-next next)))
+          (if (##pair? next2)
+            (let ((result (macro-fifo-elem next2)))
+              (if extract-and-rewind?
+                (let ((next3 (macro-fifo-next next2)))
+                  (macro-fifo-next-set! next next3)
+                  (if (##not (##pair? next3))
+                    (macro-fifo-tail-set! (macro-mailbox-fifo mb) next))
+                  (macro-mailbox-cursor-set! mb #f))
+                (macro-mailbox-cursor-set! mb next))
+              (macro-mutex-unlock! mutex)
+              (let ()
+                (declare (interrupts-enabled))
+                result))
+            (if (##mutex-signal-and-condvar-wait!
+                 mutex
+                 (macro-mailbox-condvar mb)
+                 timeout)
+              (loop)
+              (if (##eq? timeout-val (macro-absent-obj))
+                (##raise-mailbox-receive-timeout-exception
+                 prim
+                 absrel-timeout
+                 timeout-val)
+                timeout-val))))))))
 
 (define-prim (thread-mailbox-next
               #!optional
