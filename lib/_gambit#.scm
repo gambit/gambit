@@ -685,6 +685,7 @@
 (##define-macro (macro-gc-hash-table-flag-mem-alloc-keys) 16)
 (##define-macro (macro-gc-hash-table-flag-need-rehash)    32)
 (##define-macro (macro-gc-hash-table-flag-union-find)     64)
+(##define-macro (macro-gc-hash-table-flag-scheme-hashed) 128)
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
