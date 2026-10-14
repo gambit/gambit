@@ -1,0 +1,87 @@
+(include "#.scm")
+
+;; Run the same interpreter, with explicit arguments and no shell commands.
+(define (child-settings code)
+  (list path: (executable-path)
+        arguments: (list (string-append "-:tl,~~lib=" (path-expand "~~lib"))
+                         "-e" code)
+        show-console: #f))
+
+(test-equal '(reply payload)
+ (let ((p (open-process (child-settings "(write (list 'reply (read)))"))))
+   (dynamic-wind
+    (lambda () #f)
+    (lambda ()
+      (input-port-timeout-set! p 10)
+      (output-port-timeout-set! p 10)
+      (test-assert (> (process-pid p) 0))
+      (write 'payload p)
+      (newline p)
+      (force-output p)
+      (close-output-port p)
+      (read p))
+    (lambda () (close-port p) (test-eqv 0 (process-status p 10 'timed-out))))))
+(test-equal '(answer 1792)
+ (let ((p (open-input-process (child-settings "(write 'answer) (exit 7)"))))
+   (input-port-timeout-set! p 10)
+   (let ((result (read p)))
+     (close-port p)
+     (list result (process-status p 10 'timed-out)))))
+(test-eqv 0
+ (let ((p (open-output-process
+           (child-settings "(exit (if (eq? (read) 'payload) 0 1))"))))
+   (output-port-timeout-set! p 10)
+   (write 'payload p)
+   (newline p)
+   (close-port p)
+   (process-status p 10 'timed-out)))
+(test-eq 'answer
+ (call-with-input-process (child-settings "(write 'answer)")
+  (lambda (p) (input-port-timeout-set! p 10) (read p))))
+(test-equal '(finished 0)
+ (let ((port #f))
+   (let ((result
+          (call-with-output-process
+           (child-settings "(exit (if (eq? (read) 'payload) 0 1))")
+           (lambda (p)
+             (set! port p)
+             (write 'payload p)
+             (newline p)
+             'finished))))
+     (list result (process-status port 10 'timed-out)))))
+(test-eq 'answer
+ (with-input-from-process (child-settings "(write 'answer)")
+  (lambda () (input-port-timeout-set! (current-input-port) 10) (read))))
+(test-equal '(finished 0)
+ (let ((port #f))
+   (let ((result
+          (with-output-to-process
+           (child-settings "(exit (if (eq? (read) 'payload) 0 1))")
+           (lambda ()
+             (set! port (current-output-port))
+             (write 'payload)
+             (newline)
+             'finished))))
+     (list result (process-status port 10 'timed-out)))))
+
+;; The child waits for input, making the timeout independent of its startup
+;; speed. A message releases the child, which is reaped after the test.
+(let ((p (open-process (child-settings "(read)"))))
+  (dynamic-wind
+   (lambda () #f)
+   (lambda ()
+     (let ((e (with-exception-catcher (lambda (e) e)
+               (lambda () (process-status p 0)))))
+       (test-eq #t (unterminated-process-exception? e))
+       (test-eq #f (unterminated-process-exception? #f))
+       (test-eq process-status (unterminated-process-exception-procedure e))
+       (test-equal (list p) (unterminated-process-exception-arguments e))))
+   (lambda ()
+     (write 'finish p)
+     (newline p)
+     (force-output p)
+     (close-output-port p)
+     (close-port p)
+     (test-eqv 0 (process-status p 10 'timed-out)))))
+(test-error type-exception? (process-pid #f))
+(test-error type-exception? (process-status #f))
