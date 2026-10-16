@@ -73,7 +73,7 @@ mandir = @mandir@
 RCFILES = makefile.in \
 debug.scm error.scm r4rstest.scm mix.scm mem.scm client.c server.scm server.h \
 test1.ok test2.ok test3.ok test4.ok test5.ok test6.ok test7.ok \
-test8.ok test9.ok test10.scm input run-unit-tests.scm
+test8.ok test9.ok test10.scm input run-unit-tests.scm stack-overflow-undo.c
 
 GENDISTFILES =
 
@@ -83,6 +83,12 @@ GAMBITDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
 GAMBITDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
 GAMBITDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
 GAMBITDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
+
+BUILD_EXE_OUTPUT_FILENAME_PARAM = stack-overflow-undo@exe@
+BUILD_EXE_CC_OPTIONS_PARAM =
+BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM =
+BUILD_EXE_INPUT_FILENAMES_PARAM = $(srcdirpfx)stack-overflow-undo.c
+BUILD_EXE_LD_OPTIONS_PARAM =
 
 all: core
 
@@ -108,7 +114,7 @@ core-post:
 
 .NOTPARALLEL:
 
-check: core test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
+check: core test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11 test12
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \
@@ -240,6 +246,12 @@ st-java:
 	(cd ../lib; make _gambit.java)
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -java -gsc
 
+test12:
+	@echo "------------ TEST 12 (stack overflow undo ownership)"
+	@BUILD_EXE@
+	@SETDLPATH@ ./stack-overflow-undo@exe@
+	rm -f stack-overflow-undo@exe@ stack-overflow-undo@obj@
+
 bootstrap-pre:
 
 bootstrap-post:
@@ -266,7 +278,8 @@ mostlyclean-post mostlyclean-post-nonrec:
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem mem.exe \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix mix.exe \
 	  server.c server_.c server@obj@ server_@obj@ client@obj@ client \
-	  client.exe gambit.h so_locations *.out tmp*
+	  client.exe stack-overflow-undo@exe@ stack-overflow-undo@obj@ \
+	  gambit.h so_locations *.out tmp*
 
 clean-pre: mostlyclean-pre
 
