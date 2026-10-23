@@ -3023,6 +3023,10 @@
                  (wbuf2 (,macro-vect-port-wbuf port2))
                  (whi1 (,macro-vect-port-whi port1))
                  (whi2 (,macro-vect-port-whi port2)))
+             ;; Both endpoints access shared buffers and wait predicates.
+             ;; Serialize them with one mutex so publication cannot race
+             ;; with the peer checking a predicate and beginning to wait.
+             (macro-port-mutex-set! port2 (macro-port-mutex port1))
              (,macro-vect-port-wbuf-set! port1 wbuf2)
              (,macro-vect-port-wbuf-set! port2 wbuf1)
              (,macro-vect-port-whi-set! port1 whi2)
