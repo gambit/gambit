@@ -1,0 +1,43 @@
+@c Copyright (c) 2024 by Macon Gambill, All Rights Reserved.
+@node Introduction
+@nodedescription A high-level overview of Gambit.
+@chapter Introduction
+
+@pindex gsc
+@pindex gsi
+The Gambit programming system is a complete implementation of the Scheme
+language aimed at portability, reliability, and speed.  It features two
+main programs: @slanted{@command{gsi}}, the Gambit Scheme interpreter,
+and @slanted{@command{gsc}}, the Gambit Scheme compiler.
+
+@cindex @value{RNRS} @seeentry {Revised Report on the Algorithmic Language Scheme}
+@cindex @value{R4RS} @seeentry{@value{RNRS}}
+@cindex @value{R5RS} @seeentry{@value{RNRS}}
+@cindex @value{R7RS} @seeentry{@value{RNRS}}
+@cindex Revised Report on the Algorithmic Language Scheme @seeentry{Scheme standards}
+@cindex Scheme standards
+@cindex @acronym{IEEE 1178-1990} @seeentry{Scheme standards}
+In its default configuration, Gambit provides a superset of the language
+described by @cite{The Revised@sup{7} Report on the Algorithmic Language
+Scheme}, also known as @slanted{@value{R7RS}}.  Gambit may be configured
+to conform to the @value{R4RS}, @value{R5RS}, @value{R7RS}, or
+@acronym{IEEE 1178-1990} Scheme standards.
+
+@t{gsi} provides a subset of @t{gsc}'s functionality.  The only
+difference between these programs is that @t{gsc} also provides certain
+procedures and invocation options specific to compilation.
+
+@t{gsc} compiles programs by @dfn{transpiling} Scheme source code to
+source code for a target language, then optionally passing that
+transpiled code to tools like @t{gcc} for further processing
+(@pxref{,,,gcc, Using the GNU Compiler Collection}).  Supported target
+languages include C and JavaScript.
+
+The C target is the most mature, generating efficient C code that lets
+Gambit run on any platform for which a C compiler is available.  With
+appropriate declarations in the Scheme source code (@todo{reference
+goes here}), the resulting programs run roughly as fast as functionally
+equivalent programs built from hand-written C.
+
+Most of the Gambit system, including @t{gsi} and @t{gsc} itself, is
+written in Scheme and compiled using @t{gsc}.

@@ -1,0 +1,72 @@
+\input texinfo
+@c Copyright (c) 2024 by Macon Gambill, All Rights Reserved.
+@include toolshed/macros+vars.txi
+
+@copying
+This is the Gambit colorization sample document (built @today{}).
+
+Copyright @copyright{} 2024 Marc Feeley et al.
+@quotation
+The Gambit system, version @value{VERSION}, is licensed under two licenses:
+the @url{https://www.apache.org/licenses/,Apache License@comma{} version
+2.0}, and the @url{https://www.gnu.org/licenses/,GNU Lesser General Public
+License@comma{} version 2.1}.  You may choose which of these two licenses
+to abide by.
+@end quotation
+@end copying
+
+@settitle Gambit color samples
+@insertcopying
+
+@node Examples
+@chapter Examples
+
+@deftypefn @U{00A7}/@U{00B6} @/ proceed @pari{obj} @opt{@parii{obj} @opt{@pariii{obj}}}
+Proceeds using its arguments.  @vari{obj} is mandatory; @varii{obj} and
+@variii{obj} are optional.  If @variii{obj} is given, @varii{obj} is
+mandatory.
+
+@lisp
+(let ((bagA '#&( )) (bagB '#&"horse"))
+   (set-box! bagB #!void)
+   (if (null? (unbox bagB))
+       bagA
+       bagB)) @ok{#&#!void}
+@end lisp
+
+@lisp
+(let ((sort (λ (box) (list-sort char<? (unbox box))))
+      (box '#&(#\alarm #\delete #\backspace #\linefeed)))
+  (sort box)) @ok{(#\alarm #\backspace #\newline #\delete)}
+@end lisp
+
+@lisp
+(or (null? #\nul) (null? #\null) #!eof) @ok{#!eof}
+(if #\f (and (not #false) "\"") null:)  @ok{"\""}
+@end lisp
+
+@lisp
+(cdr '()) @exception{type}
+(call-with-values (lambda () (values skip: next:))
+  car) @exception{wrong-number-of-arguments}
+@end lisp
+
+@lisp
+(procedure? (lambda (x) x)      @ok{#true}
+(not (procedure? (lambda x x))) @ok{#false}
+(define f '#0=(if #!eof f f: #\f #f "f" '#&f #\" #\' #\& . #0#))
+(cadddr (#2 f)) @ok{f:} ;; N.B. f (see f)
+@end lisp
+
+@lisp
+(map null? ;; note this
+     (append (cons (or (box? '#&"box") (keyword? imakey:)) '())
+             (list ( and #s8(   ) #false) #\x62)
+             '(#() t: "" #u8(0 1) . ()))) @ok{(#f #f #f #f #f #f #f)}
+@end lisp
+
+@lisp
+(string? "(not \" '#\r i g h #t \") #!eof") @ok{#t}
+@end lisp
+@end deftypefn
+@bye
