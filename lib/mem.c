@@ -4674,10 +4674,7 @@ ___processor_state ___ps;)
                 -___BREAK_FRAME_NEXT,
                 ___END_OF_CONT_MARKER) /* no next frame */
 
-  ___FP_SET_STK(alloc_stack_ptr,
-                -___FIRST_BREAK_FRAME_STACK_MSECTION,
-                ___CAST(___WORD,
-                        ___CAST(___msection*,NULL))) /* not a stack section overflow */
+  ___FORBID_STACK_OVERFLOW_UNDO(alloc_stack_ptr) /* not a stack section overflow */
 
   ___ps->stack_break = alloc_stack_ptr;
 
@@ -6246,10 +6243,7 @@ ___PSDKR)
 
   alloc_stack_ptr = p2;
 
-  ___FP_SET_STK(alloc_stack_ptr,
-                -___FIRST_BREAK_FRAME_STACK_MSECTION,
-                ___CAST(___WORD,
-                        ___CAST(___msection*,NULL))) /* not a stack section overflow */
+  ___FORBID_STACK_OVERFLOW_UNDO(alloc_stack_ptr) /* not a stack section overflow */
 }
 
 
@@ -7292,16 +7286,17 @@ ___PSDKR)
             {
               /* reached the break frame */
 
-              /* best to not transfer any frames to new stack msection */
-
               /*
-               * Add a break frame.
+               * It is best to not transfer any frames to the new
+               * stack msection because there is no performance
+               * advantage to do so (there is too little space in the
+               * previous stack msection to reuse).
                */
 
-              ___FP_ADJFP(alloc_stack_ptr,___BREAK_FRAME_SPACE)
               ___FP_SET_STK(alloc_stack_ptr,
                             -___BREAK_FRAME_NEXT,
                             ___CAST(___WORD,prev_alloc_stack_ptr))
+              ___FORBID_STACK_OVERFLOW_UNDO(alloc_stack_ptr)
               ___ps->stack_break = alloc_stack_ptr;
 
               fp = alloc_stack_ptr;
