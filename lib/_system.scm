@@ -1523,11 +1523,12 @@ end-of-code
             (begin
               (macro-gc-hash-table-flags-set!
                gcht
-               (fxior ;; force rehash at next access!
+               (fxior ;; decoded entries are not in hash order
                 flags
                 (##fx+ (macro-gc-hash-table-flag-key-moved)
                        (macro-gc-hash-table-flag-need-rehash))))
-              gcht))))))
+              ;; SMP builds rehash eagerly, so access will not repair this.
+              (##gc-hash-table-rehash! gcht gcht)))))))
 
 (define-prim (##smallest-prime-no-less-than n) ;; n >= 3
   (let loop1 ((n (if (##fxeven? n) (##fx+ n 1) n)))
@@ -4256,11 +4257,12 @@ end-of-code
                                              (begin
                                                (macro-gc-hash-table-flags-set!
                                                 obj
-                                                (fxior ;; force rehash at next access!
+                                                (fxior ;; decoded entries are not in hash order
                                                  flags
                                                  (fx+ (macro-gc-hash-table-flag-key-moved)
                                                       (macro-gc-hash-table-flag-need-rehash))))
-                                               obj)))
+                                               ;; Rebuild before publishing the decoded table.
+                                               (##gc-hash-table-rehash! obj obj))))
                                        (err)))))))
 
                         ((fx= x (homvector-tag))
