@@ -1,0 +1,139 @@
+--- a/include/gambit.h.in
++++ b/include/gambit.h.in
+@@ -6059,6 +6059,7 @@
+ #define ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS 16
+ #define ___GCHASHTABLE_FLAG_NEED_REHASH    32
+ #define ___GCHASHTABLE_FLAG_UNION_FIND     64
++#define ___GCHASHTABLE_FLAG_SCHEME_HASHED  128 /* internal GC classification */
+ 
+ #define ___GCHASHTABLE_NEXT_FIELD(gcht) \
+ ___FIELD(WEAK,gcht,___GCHASHTABLE_NEXT)
+--- a/lib/_gambit#.scm
++++ b/lib/_gambit#.scm
+@@ -685,6 +685,7 @@
+ (##define-macro (macro-gc-hash-table-flag-mem-alloc-keys) 16)
+ (##define-macro (macro-gc-hash-table-flag-need-rehash)    32)
+ (##define-macro (macro-gc-hash-table-flag-union-find)     64)
++(##define-macro (macro-gc-hash-table-flag-scheme-hashed) 128)
+ 
+ ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+--- a/lib/_system.scm
++++ b/lib/_system.scm
+@@ -2047,7 +2047,11 @@
+                  n
+                  (##fxior
+                   (macro-gc-hash-table-flag-mem-alloc-keys)
+-                  (macro-table-flags table))
++                  (##fxior
++                    (macro-table-flags table)
++                    (if (macro-table-test table)
++                        (macro-gc-hash-table-flag-scheme-hashed)
++                        0)))
+                  (macro-table-loads table))))
+           (macro-table-gcht-set! table gcht)
+           gcht)
+@@ -4368,16 +4372,30 @@
+                                (deserialize-nonneg-fixnum! 0 0)))))
+                     (deserialize-subprocedure-with-id! subproc-id)))
+ 
+-                 ((fx>= x (structure-tag))
+-                  (deserialize-vector-like!
+-                   x
+-                   (lambda (len)
+-                     (##make-structure
+-                      (macro-type-partially-initialized-structure)
+-                      len))
+-                   (lambda (obj i val)
+-                     (##unchecked-structure-set! obj val i #f #f))))
+-
++                  ((fx>= x (structure-tag))
++                   (let ((obj
++                          (deserialize-vector-like!
++                           x
++                           (lambda (len)
++                             (##make-structure
++                              (macro-type-partially-initialized-structure)
++                              len))
++                           (lambda (obj i val)
++                             (##unchecked-structure-set! obj val i #f #f)))))
++                     ;; Classify the completed Scheme-hashed table's GC object.
++                     ;; Do not add the bit to macro-table-flags (observable).
++                     ;; NOTE: not safe against GC during the preceding decode
++                     ;; without separate verification and potentially more work.
++                     (if (##table? obj)
++                         (let ((gcht (macro-table-gcht obj)))
++                           (if (and (macro-table-test obj)
++                                    (##gc-hash-table? gcht))
++                               (macro-gc-hash-table-flags-set!
++                                gcht
++                                (##fxior
++                                 (macro-gc-hash-table-flags gcht)
++                                 (macro-gc-hash-table-flag-scheme-hashed))))))
++                     obj))
+                  ((fx>= x (vector-tag))
+                   (deserialize-vector-like!
+                    x
+--- a/lib/mem.c
++++ b/lib/mem.c
+@@ -5722,7 +5722,20 @@
+ 
+       if (!___FIXZEROP(___FIXAND(___FIX(flags),
+                                  ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
+-        gc_hash_table_rehash_in_situ (___SUBTYPED_FROM_BODY(body));
++        {
++          if (flags & ___GCHASHTABLE_FLAG_SCHEME_HASHED)
++            {
++              /*
++               * The Scheme-side hash function determines placement.
++               * Preserve entries and request Scheme-side reinsertion.
++               */
++              flags &= ~___GCHASHTABLE_FLAG_KEY_MOVED;
++              body[___GCHASHTABLE_FLAGS] = ___FIX(flags);
++            }
++          else
++            gc_hash_table_rehash_in_situ
++              (___SUBTYPED_FROM_BODY(body));
++        }
+ 
+ #endif
+     }
+@@ -6184,6 +6197,38 @@
+   int size2 = words - ___GCHASHTABLE_KEY0;
+   int i;
+ 
++  if (___EQP(ht_src, ht_dst))
++    {
++      ___BOOL mem_alloc_keys =
++        !___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
++                                ___FIX(___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)));
++
++      /*
++       * The in-place GC rehasher requires uniformly allocated or
++       * nonallocated keys.  General Scheme tables can mix both kinds;
++       * their NEED_REHASH flag lets table-access rebuild them using
++       * the table's own hash function instead.
++       */
++
++      for (i=size2-2; i>=0; i-=2)
++        {
++          ___SCMOBJ key = body_src[i+___GCHASHTABLE_KEY0];
++
++          if (key != ___UNUSED &&
++              key != ___DELETED &&
++              (!!___MEM_ALLOCATED(key) != mem_alloc_keys))
++            {
++              body_src[___GCHASHTABLE_FLAGS] =
++                ___FIXAND(body_src[___GCHASHTABLE_FLAGS],
++                          ___FIXNOT(___FIX(___GCHASHTABLE_FLAG_KEY_MOVED)));
++              return ht_dst;
++            }
++        }
++
++      gc_hash_table_rehash_in_situ (ht_src);
++      return ht_dst;
++    }
++
+   if (___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
+                             ___FIX(___GCHASHTABLE_FLAG_UNION_FIND))))
+     {
