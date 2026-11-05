@@ -1,0 +1,11 @@
+(include "#.scm")
+
+(test-equal "ab" (string-append "a" "b"))
+(test-equal "" (string-append))
+(test-equal "xxxxx" (make-string 5 #\x))
+(test-eqv #\c (string-ref "abcde" 2))
+(test-eq #t (string? "abc"))
+(test-eq #f (string? 123))
+(test-error-tail type-exception? (string-append 1))
+(test-error-tail type-exception? (make-string 'a))
+(test-error-tail type-exception? (string-ref 1 0))

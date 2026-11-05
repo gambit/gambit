@@ -1,0 +1,15 @@
+(include "#.scm")
+
+;; These names are only called outside test-* in prim_keyword.scm.
+(test-equal "a" (keyword->string a:))
+(test-eq a: (string->keyword "a"))
+(test-eq #t (keyword? a:))
+(test-eq #f (keyword? "a"))
+(test-eq #f (uninterned-keyword? a:))
+(test-eq #t (uninterned-keyword? (string->uninterned-keyword "a")))
+(test-error-tail type-exception? (keyword->string 1))
+(test-error-tail type-exception? (string->keyword 1))
+(test-error-tail wrong-number-of-arguments-exception? (keyword->string))
+(test-error-tail wrong-number-of-arguments-exception? (string->keyword))
+(test-error-tail wrong-number-of-arguments-exception? (uninterned-keyword?))
+(test-error-tail wrong-number-of-arguments-exception? (uninterned-keyword? a: 1))

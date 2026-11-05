@@ -1,0 +1,23 @@
+(include "#.scm")
+
+(test-assert (exact-integer? (system-version)))
+(test-assert (> (system-version) 0))
+(test-assert (string? (system-version-string)))
+(test-assert (> (string-length (system-version-string)) 0))
+(test-assert (exact-integer? (system-stamp)))
+(test-assert (> (system-stamp) 0))
+(test-assert (string? (configure-command-string)))
+(test-assert (> (string-length (configure-command-string)) 0))
+
+(define times (process-times))
+(test-assert (f64vector? times))
+(test-eq 3 (f64vector-length times))
+(test-assert (>= (f64vector-ref times 0) 0.0))
+(test-assert (>= (f64vector-ref times 1) 0.0))
+(test-assert (>= (f64vector-ref times 2) 0.0))
+
+(test-error-tail wrong-number-of-arguments-exception? (system-version 1))
+(test-error-tail wrong-number-of-arguments-exception? (system-version-string 1))
+(test-error-tail wrong-number-of-arguments-exception? (system-stamp 1))
+(test-error-tail wrong-number-of-arguments-exception? (configure-command-string 1))
+(test-error-tail wrong-number-of-arguments-exception? (process-times 1))

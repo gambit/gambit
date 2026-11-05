@@ -1,0 +1,10 @@
+(include "#.scm")
+
+(test-equal "abc" (string-concatenate '("a" "b" "c")))
+(test-equal "abc" (list->string '(#\a #\b #\c)))
+(test-equal '(#\a #\b #\c) (string->list "abc"))
+(test-equal "bc" (substring "abcde" 1 3))
+(test-error-tail type-exception? (string-concatenate 'a))
+(test-error-tail type-exception? (list->string "abc"))
+(test-error-tail type-exception? (string->list 1))
+(test-error-tail wrong-number-of-arguments-exception? (string-concatenate))

@@ -1,0 +1,10 @@
+(include "#.scm")
+
+(test-assert (string? (path-expand "foo.bar")))
+(test-equal ".bar" (path-extension "foo.bar"))
+(test-assert (string? (path-normalize "foo.bar")))
+(test-equal "foo" (path-strip-extension "foo.bar"))
+(test-assert (string? (path-strip-volume (path-expand "foo.bar"))))
+(test-assert (string? (path-volume (path-expand "foo.bar"))))
+(test-error-tail type-exception? (path-expand 1))
+(test-error-tail wrong-number-of-arguments-exception? (path-expand))
