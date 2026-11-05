@@ -529,6 +529,8 @@
 (##define-macro (macro-inexact-+1)     1.0)
 (##define-macro (macro-inexact--1)    -1.0)
 (##define-macro (macro-inexact-+1/2)   0.5)
+(##define-macro (macro-inexact--1/2)  -0.5)
+(##define-macro (macro-inexact-+1/4)   0.25)
 (##define-macro (macro-inexact-+0)     0.0)
 (##define-macro (macro-inexact--0)    -0.0)
 (##define-macro (macro-inexact-+pi)    3.141592653589793)
@@ -638,6 +640,9 @@
 
 (##define-macro (macro-flonum-e-min) ;; (- (+ (macro-flonum-e-bias) (macro-flonum-m-bits) -1))
   -1074)
+
+(##define-macro (macro-inexact-flonum-e-min) ;; (- (+ (macro-flonum-e-bias) (macro-flonum-m-bits) -1))
+  -1074.)
 
 (##define-macro (macro-flonum-e-max) ;; (- (- (expt 2 (macro-flonum-e-bits)) 2) (macro-flonum-e-bias))
   1023)

@@ -23,6 +23,11 @@
     ((a b) (list 1 a 2 b))
     (rest (list 'rest= rest))))
 
+(define h
+  (case-lambda
+   ((a) 1)
+   ((a . rest) rest)))
+
 (test-equal '(1 11 2 22) (f 11 22))
 (test-equal '(1 11 2 22 3 33 4 44) (f 11 22 33 44))
 
@@ -37,5 +42,9 @@
 (test-equal '(1 11 2 22) (g 11 22))
 (test-equal '(rest= (11 22 33)) (g 11 22 33))
 (test-equal '(rest= (11 22 33 44)) (g 11 22 33 44))
+
+(test-error-tail wrong-number-of-arguments-exception? (h))
+(test-equal 1 (h 1))
+(test-equal '(2) (h 1 2))
 
 ;;;============================================================================

@@ -72,4 +72,7 @@ caught exception #<stack-overflow-exception #3>
 (executing-will a (33 . 44))
 --------------------------------------- GC
 --------------------------------------- GC
+test-continuation-return
+test-continuation-graft
+test-thread-restore
 all-tests-done

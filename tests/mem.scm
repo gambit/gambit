@@ -1,6 +1,6 @@
 ; File: "mem.scm"
 
-; Copyright (c) 1996-2024 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1996-2026 by Marc Feeley, All Rights Reserved.
 
 ; Test program for Gambit's memory management system.
 
@@ -515,6 +515,91 @@ ___SCMOBJ baz ()
 
 ;------------------------------------------------------------------------------
 
+; Test #8
+;
+; Stack overflow undo optimization test.
+
+
+(declare (standard-bindings) (extended-bindings) (not safe))
+
+(define ___SUBTYPED_BODY        1)
+(define ___MAX_NB_FRAME_SLOTS   8192)
+(define ___MSECTION_SIZE        131072)
+(define ___MSECTION_FUDGE       (+ ___MAX_NB_FRAME_SLOTS 1 ___SUBTYPED_BODY))
+
+(define approx-depth-that-triggers-issue
+  (quotient (- (quotient ___MSECTION_SIZE 2) ___MSECTION_FUDGE) 4))
+
+(define (at-depth d thunk)
+  (if (fx> d 0)
+      (identity (at-depth (fx- d 1) thunk))
+      (thunk)))
+
+(define (test-continuation-return)
+  (let loop ((iter (fx- approx-depth-that-triggers-issue 8)))
+    (if (fx<= iter (fx+ approx-depth-that-triggers-issue 8))
+        (begin
+          ;;(println iter)
+          (trigger-gc)
+          (continuation-capture
+           (lambda (c)
+             (at-depth iter
+                       (lambda ()
+                         (continuation-return c #f)))))
+          (loop (fx+ iter 1))))))
+
+(define (test-continuation-graft)
+  (let loop ((iter (fx- approx-depth-that-triggers-issue 8)))
+    (if (fx<= iter (fx+ approx-depth-that-triggers-issue 8))
+        (begin
+          ;;(println iter)
+          (trigger-gc)
+          (continuation-capture
+           (lambda (c)
+             (at-depth iter
+                       (lambda ()
+                         (continuation-graft c (lambda () #f))))))
+          (loop (fx+ iter 1))))))
+
+(define (begin-thread)
+  (let ((m (make-mutex)))
+    (mutex-lock! m)
+    (let ((t (make-thread
+              (lambda ()
+                (mutex-unlock! m)
+                (thread-yield!)))))
+      (thread-quantum-set! t +inf.0)
+      (thread-start! t)
+      (mutex-lock! m) ;; wait until thread started
+      t)))
+
+(define (test-thread-restore)
+  (thread-quantum-set! (current-thread) +inf.0)
+  (let loop ((iter (fx- approx-depth-that-triggers-issue 32)))
+    (if (fx<= iter (fx+ approx-depth-that-triggers-issue 8))
+        (begin
+          ;;(println iter)
+          (trigger-gc)
+          (let ((t (begin-thread)))
+            (at-depth iter
+                      (lambda ()
+                        (at-depth 5 list)
+                        (thread-yield!)))
+            (loop (fx+ iter 1)))))))
+
+(define (test8)
+
+  (println "test-continuation-return")
+  (test-continuation-return)
+
+  (println "test-continuation-graft")
+  (test-continuation-graft)
+
+  (println "test-thread-restore")
+  (test-thread-restore))
+
+;------------------------------------------------------------------------------
+
 (define (test-all)
   (set! gc-reports? #f)
   (test1)
@@ -524,6 +609,7 @@ ___SCMOBJ baz ()
   (test5)
   (test6)
   (test7)
+  (test8)
   (pretty-print 'all-tests-done))
 
 (test-all)

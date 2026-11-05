@@ -2938,30 +2938,63 @@ for a discussion of branch cuts.
                                          (##flcopysign (macro-inexact-+pi/2) inexact-y)))
                      ((##fl= inexact-x (macro-inexact-+1))
                       (macro-cpxnum-make
-                       (if (fl= inexact-y (macro-inexact-+0))
-                           (macro-inexact-+inf)
-                           (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
-                                           (##flsqrt abs-y))))
-                       (##fl/ (##flcopysign (##fl+ (macro-inexact-+pi/2)
-                                                   (##flatan (##fl/ abs-y
-                                                                    (macro-inexact-+2))))
+
+                       ;; Kahan's original formula is
+
+                       ;; (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
+                       ;;                 (##flsqrt abs-y)))
+
+                       ;; First we rewrite Kahan's formula to have only two sources of roundoff,
+                       ;; with the flexpt and the fllog1p
+
+                       ;; When abs-y < 1e-8, then (##fl+ (macro-inexact-+4) (##flsquare abs-y)) is 4., so we
+                       ;; rewrite it as the second branch.  When abs-y is not subnormal then
+                       ;; the only source of roundoff is the fllog.
+
+                       ;; Finally, when abs-y is subnormal then multiplying by 1/2 can lead to large
+                       ;; (relative) roundoff error when the mantissa is odd; on the other hand, adding (log 1/2)
+                       ;; can add another roundoff error. So we add (log 1/2) when there are < about
+                       ;; 45 significant bits in the mantissa of abs-y and it's odd.
+
+                       (let ((half-abs-y (##fl* (macro-inexact-+1/2) abs-y)))
+                         (cond
+                          ;; numbers bigger than 1e-8
+                          ((##fl<= 1e-8 abs-y)
+                           (##fl* (macro-inexact-+1/4)
+                                  (##fllog1p (##flexpt half-abs-y -2.))))
+                          ((or
+                            ;; normal and large subnormals
+                            (##fl<= (##flexpt (macro-inexact-+2) (##fl+ (macro-inexact-flonum-e-min) 45.))
+                                    abs-y)
+                            ;; subnormals with even mantissas
+                            (##fl= abs-y (##fl* half-abs-y (macro-inexact-+2))))
+                           (##fl* (macro-inexact--1/2)
+                                  (##fllog half-abs-y)))
+                          (else
+                           ;; small subnormals with odd mantissas
+                           (##fl* (macro-inexact--1/2)
+                                  (##fl- (##fllog (##fl* (macro-inexact-+2) abs-y))
+                                         (##fllog (macro-inexact-+4)))))))
+
+                       (##fl* (##flcopysign (##fl+ (macro-inexact-+pi/2)
+                                                   (##flatan (##fl* abs-y (macro-inexact-+1/2))))
                                             inexact-y)
-                              (macro-inexact-+2))))
+                              (macro-inexact-+1/2))))
                      (else
                       (macro-cpxnum-make
                        (if (##eqv? x 0)
                            ;; if abs-y were exact in the next expression (no matter its value)
                            ;; then the argument to fllog1p would be exact 0, so the result would be exact 0.
                            0
-                           (##fl/ (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)   ;; was (##* 4 x) originally
+                           (##fl* (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)   ;; was (##* 4 x) originally
                                                     (##fl+ (##flsquare (##fl- (macro-inexact-+1) inexact-x))
                                                            (##flsquare abs-y))))
-                                  (macro-inexact-+4)))
-                       (##fl/ (##carg (macro-cpxnum-make (##fl- (##fl* (##fl- (macro-inexact-+1) inexact-x)
+                                  (macro-inexact-+1/4)))
+                       (##fl* (##carg (macro-cpxnum-make (##fl- (##fl* (##fl- (macro-inexact-+1) inexact-x)
                                                                        (##fl+ (macro-inexact-+1) inexact-x))
                                                                 (##flsquare abs-y))
                                                          (##fl* (macro-inexact-+2) inexact-y)))
-                              (macro-inexact-+2)))))))
+                              (macro-inexact-+1/2)))))))
     (##* beta (##conjugate zeta))))
 
 (define-prim (##ctanh xi+ieta)
