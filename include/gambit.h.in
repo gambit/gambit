@@ -9206,7 +9206,7 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #define ___CEILING_DIV(n,m)(((n)+(m)-1)/(m))
 #define ___ROUND_TO_MULT(n,m)(___CEILING_DIV(n,m)*(m))
 #define ___BREAK_FRAME_NEXT 1
-#define ___BREAK_FRAME_SPACE ___ROUND_TO_MULT(1,___FRAME_ALIGN)
+#define ___BREAK_FRAME_SPACE ___ROUND_TO_MULT(2,___FRAME_ALIGN)
 #define ___FIRST_BREAK_FRAME_STACK_MSECTION 2
 #define ___FIRST_BREAK_FRAME_STACK_BREAK    3
 #define ___FIRST_BREAK_FRAME_SPACE ___ROUND_TO_MULT(3,___FRAME_ALIGN)
