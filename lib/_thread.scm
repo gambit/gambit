@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4712,22 +4712,26 @@
   (let loop1 ((x lst) (n 0))
     (if (##pair? x)
         (loop1 (##cdr x) (##fx+ n 1))
-        (let ((vals (##make-values n)))
-          (let loop2 ((x lst) (i 0))
-            (if (and (##pair? x)  ;; double check in case another
-                     (##fx< i n)) ;; thread mutates the list
-                (let ((elem (##car x)))
-                  (##values-set! vals i elem)
-                  (loop2 (##cdr x) (##fx+ i 1)))
-                vals))))))
+        (if (##fx= n 1)
+            (##car lst)
+            (let ((vals (##make-values n)))
+              (let loop2 ((x lst) (i 0))
+                (if (and (##pair? x)  ;; double check in case another
+                         (##fx< i n)) ;; thread mutates the list
+                    (let ((elem (##car x)))
+                      (##values-set! vals i elem)
+                      (loop2 (##cdr x) (##fx+ i 1)))
+                    vals)))))))
 
-(define-prim (##values->list vals)
-  (let ((start 0)
-        (end (##values-length vals)))
-    (let loop ((lst '()) (i (##fx- end 1)))
-      (if (##fx< i start)
-          lst
-          (loop (##cons (##values-ref vals i) lst) (##fx- i 1))))))
+(define-prim (##values->list vals #!optional (start 0))
+  (if (##values? vals)
+      (let loop ((lst '()) (i (##fx- (##values-length vals) 1)))
+        (if (##fx< i start)
+            lst
+            (loop (##cons (##values-ref vals i) lst) (##fx- i 1))))
+      (if (##fx= start 0)
+          (##list vals)
+          '())))
 
 (define-prim (##values
               #!optional
@@ -8220,22 +8224,26 @@
   (let loop1 ((x lst) (n 0))
     (if (##pair? x)
         (loop1 (##cdr x) (##fx+ n 1))
-        (let ((vals (##make-values n)))
-          (let loop2 ((x lst) (i 0))
-            (if (and (##pair? x)  ;; double check in case another
-                     (##fx< i n)) ;; thread mutates the list
-                (let ((elem (##car x)))
-                  (##values-set! vals i elem)
-                  (loop2 (##cdr x) (##fx+ i 1)))
-                vals))))))
+        (if (##fx= n 1)
+            (##car lst)
+            (let ((vals (##make-values n)))
+              (let loop2 ((x lst) (i 0))
+                (if (and (##pair? x)  ;; double check in case another
+                         (##fx< i n)) ;; thread mutates the list
+                    (let ((elem (##car x)))
+                      (##values-set! vals i elem)
+                      (loop2 (##cdr x) (##fx+ i 1)))
+                    vals)))))))
 
-(define-prim (##values->list vals)
-  (let ((start 0)
-        (end (##values-length vals)))
-    (let loop ((lst '()) (i (##fx- end 1)))
-      (if (##fx< i start)
-          lst
-          (loop (##cons (##values-ref vals i) lst) (##fx- i 1))))))
+(define-prim (##values->list vals #!optional (start 0))
+  (if (##values? vals)
+      (let loop ((lst '()) (i (##fx- (##values-length vals) 1)))
+        (if (##fx< i start)
+            lst
+            (loop (##cons (##values-ref vals i) lst) (##fx- i 1))))
+      (if (##fx= start 0)
+          (##list vals)
+          '())))
 
 (define-prim (##values
               #!optional

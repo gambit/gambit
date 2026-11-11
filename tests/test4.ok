@@ -9371,3 +9371,57 @@ OK
 #t
 #t
 -0.
+(11 22 33)
+(11 22 33)
+(1 2)
+(1 2)
+(3 2)
+(11 22)
+(11 22 1 (2))
+(11 22 3 1 (2 3))
+(11 22 3 -1 1 (2 3 4))
+(11 22 () 1 (2 3))
+(11 22 (3) 1 (2 3))
+(11 22 (3 -1) 1 (2 3))
+(11 22 3 () 1 (2 3 4))
+(11 22 3 (-1) 1 (2 3 4))
+(11 22 3 (-1 #(1 2)) 1 (2 3 4))
+(11 22 3 -1 () 1 (2 3 4 5))
+(11 22 3 -1 (#(1 2)) 1 (2 3 4 5))
+(11 22 3 -1 (#(1 2) (1 . 2)) 1 (2 3 4 5))
+-----> #<wrong-number-of-values-exception #2089>
+-----> #<wrong-number-of-values-exception #2090>
+-----> #<wrong-number-of-values-exception #2091>
+-----> #<wrong-number-of-values-exception #2092>
+-----> #<wrong-number-of-values-exception #2093>
+-----> #<wrong-number-of-values-exception #2094>
+-----> #<wrong-number-of-values-exception #2095>
+-----> #<wrong-number-of-values-exception #2096>
+-----> #<wrong-number-of-values-exception #2097>
+-----> #<wrong-number-of-values-exception #2098>
+(1 2)
+(1 2)
+(3 2)
+(11 22)
+(11 22 11 (22))
+(11 22 33 11 (22 33))
+(11 22 33 -11 11 (22 33 -11))
+(11 22 () 11 (22 ()))
+(11 22 (33) 11 (22 (33)))
+(11 22 (33 -11) 11 (22 (33 -11)))
+(11 22 33 () 11 (22 33 ()))
+(11 22 33 (-11) 11 (22 33 (-11)))
+(11 22 33 (-11 #(11 22)) 11 (22 33 (-11 #(11 22))))
+(11 22 33 -11 () 11 (22 33 -11 ()))
+(11 22 33 -11 (#(11 22)) 11 (22 33 -11 (#(11 22))))
+(11 22 33 -11 (#(11 22) (11 . 22)) 11 (22 33 -11 (#(11 22) (11 . 22))))
+-----> #<wrong-number-of-values-exception #2099>
+-----> #<wrong-number-of-values-exception #2100>
+-----> #<wrong-number-of-values-exception #2101>
+-----> #<wrong-number-of-values-exception #2102>
+-----> #<wrong-number-of-values-exception #2103>
+-----> #<wrong-number-of-values-exception #2104>
+-----> #<wrong-number-of-values-exception #2105>
+-----> #<wrong-number-of-values-exception #2106>
+-----> #<wrong-number-of-values-exception #2107>
+-----> #<wrong-number-of-values-exception #2108>

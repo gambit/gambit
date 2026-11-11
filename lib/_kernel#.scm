@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -110,13 +110,11 @@
 )
 
 (define-library-type-of-exception wrong-number-of-values-exception
-  id: A090C430-D98F-431E-97EE-2846052FBBE0
+  id: D5B97EF7-B164-4AD6-97E1-77870A7224C3
   constructor: #f
   opaque:
 
   (vals unprintable: read-only: no-functional-setter:)
-  (code unprintable: read-only: no-functional-setter:)
-  (rte  unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception keyword-expected-exception

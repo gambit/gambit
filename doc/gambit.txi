@@ -12765,8 +12765,6 @@ For example:
 
 @deffn procedure wrong-number-of-values-exception? @var{obj}
 @deffnx procedure wrong-number-of-values-exception-vals @var{exc}
-@deffnx procedure wrong-number-of-values-exception-code @var{exc}
-@deffnx procedure wrong-number-of-values-exception-rte @var{exc}
 
 Wrong-number-of-values-exception objects are raised by the
 @code{let-values} and @code{define-values} forms when the number of

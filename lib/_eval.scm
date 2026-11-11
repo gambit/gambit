@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1651,7 +1651,7 @@
                 inds
                 vals))))))
 
-(define ##optimize-single-var-bind-values? #t)
+(define ##optimize-single-var-bind-values? #f)
 
 (define (##optimize-single-var-bind-values?-set! x)
   (set! ##optimize-single-var-bind-values? x))
@@ -3982,9 +3982,9 @@
                             (##check-heap-limit)
                             inner-rte))))
 
-     (define (wrong-number-of-values arg)
+     (define (wrong-number-of-values $code rte arg)
        (##first-argument ;; keep $code and rte in environment-map
-        (##raise-wrong-number-of-values-exception arg $code rte)
+        (##raise-wrong-number-of-values-exception arg)
         $code
         rte))
 
@@ -4005,9 +4005,13 @@
 
                (run-body inner-rte)
 
-               (let* ((arg
-                       (let* (($code (macro-code-ref $code i))
-                              (rte inner-rte))
+               (let* (($code-arg
+                       (macro-code-ref $code i))
+                      (rte-arg
+                       inner-rte)
+                      (arg
+                       (let* (($code $code-arg)
+                              (rte rte-arg))
                          (macro-code-run $code)))
                       (pattern
                        (##vector-ref patterns i)))
@@ -4034,7 +4038,7 @@
                                                     (##fx- j 1)))
                                            (loop1 (##fx+ i 1)
                                                   j2))))))
-                             (wrong-number-of-values arg))
+                             (wrong-number-of-values $code-arg rte-arg arg))
 
                          (let ((j2 (##fx- j pattern)))
                            (if (##fx= pattern -1) ;; var
@@ -4049,7 +4053,7 @@
                                      (macro-rte-set! inner-rte (##fx- j2 1) arg)
                                      (loop1 (##fx+ i 1)
                                             j2))
-                                   (wrong-number-of-values arg)))))
+                                   (wrong-number-of-values $code-arg rte-arg arg)))))
 
                      (let ((j2 (##fx+ j pattern)))
                        (if (##values? arg)
@@ -4063,22 +4067,26 @@
                                               (##fx- j 1)))
                                      (loop1 (##fx+ i 1)
                                             j2)))
-                               (wrong-number-of-values arg))
+                               (wrong-number-of-values $code-arg rte-arg arg))
                            (if (##fx= pattern 1) ;; (var)
                                (begin
                                  (macro-rte-set! inner-rte j2 arg)
                                  (loop1 (##fx+ i 1)
                                         j2))
-                               (wrong-number-of-values arg))))))))
+                               (wrong-number-of-values $code-arg rte-arg arg))))))))
 
          (let loop5 ((i 1)
                      (n 0)
                      (args '()))
            (if (##fx<= i ns)
 
-               (let* ((arg
-                       (let* (($code (macro-code-ref $code i))
-                              (rte (or inner-rte rte)))
+               (let* (($code-arg
+                       (macro-code-ref $code i))
+                      (rte-arg
+                       (or inner-rte rte))
+                      (arg
+                       (let* (($code $code-arg)
+                              (rte rte-arg))
                          (macro-code-run $code)))
                       (pattern
                        (##vector-ref patterns i))
@@ -4093,14 +4101,14 @@
                          (loop5 (##fx+ i 1)
                                 (##fx- n pattern)
                                 new-args)
-                         (wrong-number-of-values arg))
+                         (wrong-number-of-values $code-arg rte-arg arg))
                      (if (if (##values? arg)
                              (##fx= pattern (##values-length arg))
                              (##fx= pattern 1)) ;; (var)
                          (loop5 (##fx+ i 1)
                                 (##fx+ n pattern)
                                 new-args)
-                         (wrong-number-of-values arg))))
+                         (wrong-number-of-values $code-arg rte-arg arg))))
 
                (let ((inner-rte
                       (or inner-rte

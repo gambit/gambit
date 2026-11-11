@@ -2,7 +2,7 @@
 
 ;;; File: "fixnum.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -276,6 +276,8 @@ string->canonical-symbol
 **let-sym
 **letrec*-sym
 **letrec-sym
+**let-values-sym
+**let*-values-sym
 **macro-scope-sym
 **make-delay-promise-sym
 **namespace-scope-sym
@@ -298,6 +300,13 @@ string->canonical-symbol
 **flonums?-sym
 **iflonum?-sym
 **iflonums?-sym
+**fx=-sym
+**fx>=-sym
+**values?-sym
+**values->list-sym
+**values-length-sym
+**values-ref-sym
+**raise-wrong-number-of-values-exception-sym
 **raise-sym
 **set!-sym
 **set-box!-sym

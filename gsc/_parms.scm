@@ -2,7 +2,7 @@
 
 ;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -102,8 +102,16 @@
 (define **fixnums?-sym         (string->canonical-symbol "##fixnums?"))
 (define **flonum?-sym          (string->canonical-symbol "##flonum?"))
 (define **flonums?-sym         (string->canonical-symbol "##flonums?"))
-(define **iflonum?-sym          (string->canonical-symbol "##iflonum?"))
-(define **iflonums?-sym         (string->canonical-symbol "##iflonums?"))
+(define **iflonum?-sym         (string->canonical-symbol "##iflonum?"))
+(define **iflonums?-sym        (string->canonical-symbol "##iflonums?"))
+(define **fx=-sym              (string->canonical-symbol "##fx="))
+(define **fx>=-sym             (string->canonical-symbol "##fx>="))
+(define **values?-sym          (string->canonical-symbol "##values?"))
+(define **values->list-sym     (string->canonical-symbol "##values->list"))
+(define **values-length-sym    (string->canonical-symbol "##values-length"))
+(define **values-ref-sym       (string->canonical-symbol "##values-ref"))
+(define **raise-wrong-number-of-values-exception-sym
+  (string->canonical-symbol "##raise-wrong-number-of-values-exception"))
 
 (define ieee-scheme-sym        (string->canonical-symbol "ieee-scheme"))
 (define r4rs-scheme-sym        (string->canonical-symbol "r4rs-scheme"))

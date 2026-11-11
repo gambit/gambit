@@ -1710,10 +1710,10 @@ end-of-code
 
 (implement-library-type-wrong-number-of-values-exception)
 
-(define-prim (##raise-wrong-number-of-values-exception vals code rte)
+(define-prim (##raise-wrong-number-of-values-exception vals)
   (##declare (not interrupts-enabled))
   (macro-raise
-   (macro-make-wrong-number-of-values-exception vals code rte)))
+   (macro-make-wrong-number-of-values-exception vals)))
 
 (implement-library-type-keyword-expected-exception)
 

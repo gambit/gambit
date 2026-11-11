@@ -3935,10 +3935,6 @@
               (macro-nonprocedure-operator-exception-code exc))
          =>
          code-loc)
-        ((and (macro-wrong-number-of-values-exception? exc)
-              (macro-wrong-number-of-values-exception-code exc))
-         =>
-         code-loc)
         (else
          (##continuation-locat cont))))
 

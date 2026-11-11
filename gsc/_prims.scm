@@ -1467,6 +1467,7 @@
 ("##values"                           0     #f ()    0    (#f)    extended)
 ("##make-values"                      (1 2) #f ()    0    (#f)    extended)
 ("##make-values-small"                (1 2) #f ()    0    (#f)    extended)
+("##values->list"                     (1 2) #f ()    0    (#f)    extended)
 ("##values-length"                    (1)   #f ()    0    fixnum  extended)
 ("##values-ref"                       (2)   #f ()    0    (#f)    extended)
 ("##values-set!"                      (3)   #t ()    0    (#f)    extended)
@@ -1632,6 +1633,9 @@
 
 ("##with-exception-catcher"           (2)   #t 0     0    (#f)    extended)
 ("##r7rs-with-exception-catcher"      (2)   #t 0     0    (#f)    extended)
+
+("##raise-wrong-number-of-values-exception"
+                                      (1)   #t 0     0    (#f)    extended)
 
 ;; eval
 

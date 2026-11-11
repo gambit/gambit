@@ -150,7 +150,7 @@
     (cond ((const-expr? exp) ; is assumed that the code has been alphatized)
            (quot (const-value exp)))
           ((symbol? exp)
-           (let ((x (assq exp env))) 
+           (let ((x (assq exp env)))
              (if x (cdr x) exp)))
           ((or (eq? (car exp) 'if) (eq? (car exp) 'begin))
            (cons (car exp) (map bs (cdr exp))))
@@ -1851,7 +1851,7 @@
               (pretty-print env-maps)
               (display "*** expected:\n")
               (pretty-print expected-env-maps))))))
-              
+
 (define (env-map-test0 var1 var2 var3 x)
   (declare (environment-map) (not interrupts-enabled))
   (declare (optimize-dead-local-variables))
@@ -1929,6 +1929,374 @@
 
 ;------------------------------------------------------------------------------
 
+(define (test7)
+
+  (##declare (safe))
+
+  (define e 5)
+
+  (define (must-raise-wrong-number-of-values-exception thunk)
+    (call-with-current-continuation
+     (lambda (cont)
+       (with-exception-handler
+           (lambda (exc)
+             (display "-----> ")
+             (write exc)
+             (newline)
+             (cont 0))
+         (lambda ()
+           (thunk)
+           (display "-----> no exception")
+           (newline))))))
+
+  (define (handler exc)
+    (if (wrong-number-of-values-exception? exc)
+        (call-with-values
+         (lambda () (wrong-number-of-values-exception-vals exc))
+         list)
+        'not-wrong-number-of-values-exception))
+
+  (set! a 1)
+  (set! b 2)
+  (set! c 3)
+  (set! d 4)
+
+  (pretty-print
+   (with-exception-catcher
+    handler
+    (lambda () (let-values (((a b) (values 11 22 33))) (* a b)))))
+
+  (pretty-print
+   (with-exception-catcher
+    handler
+    (lambda () (let*-values (((a b) (values 11 22 33))) (* a b)))))
+
+  ;; test valid cases
+
+  (pretty-print
+   (let-values ()
+     (list a b)))
+
+  (pretty-print
+   (let-values ((()        (values)))
+     (list a b)))
+
+  (pretty-print
+   (let-values (((a)       (+ a b)))
+     (list a b)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22)))
+     (list a b)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                (()        (values))
+                ((x y)     (values a (list b))))
+     (list a b x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c)       (+ a b))
+                ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c d)     (values (+ a b) (- a b)))
+                ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                (c         (values))
+                ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                (c         (+ a b))
+                ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                (c         (values (+ a b) (- a b)))
+                ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c . d)   (+ a b))
+                ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c . d)   (values (+ a b) (- a b)))
+                ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c . d)   (values (+ a b) (- a b) (vector a b)))
+                ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c d . e) (values (+ a b) (- a b)))
+                ((x y)     (values a (list b c d e))))
+     (list a b c d e x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c d . e) (values (+ a b) (- a b) (vector a b)))
+                ((x y)     (values a (list b c d e))))
+     (list a b c d e x y)))
+
+  (pretty-print
+   (let-values (((a b)     (values 11 22))
+                ((c d . e) (values (+ a b) (- a b) (vector a b) (cons a b)))
+                ((x y)     (values a (list b c d e))))
+     (list a b c d e x y)))
+
+  ;; tests that raise wrong-number-of-values exception
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  (()        1111)
+                  ((x y)     (values 88 99)))
+       (list a b x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  (()        (values 1111 2222))
+                  ((x y)     (values 88 99)))
+       (list a b x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c)       (values))
+                  ((x y)     (values 88 99)))
+       (list a b c x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c)       (values 1111 2222))
+                  ((x y)     (values 88 99)))
+       (list a b c x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c d)     (values))
+                  ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c d)     1111)
+                  ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c d)     (values 1111 2222 3333))
+                  ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c . d)   (values))
+                  ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c d . e) (values))
+                  ((x y)     (values 88 99)))
+       (list a b c d e x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let-values (((a b)     (values 11 22))
+                  ((c d . e) 1111)
+                  ((x y)     (values 88 99)))
+       (list a b c d e x y))))
+
+  ;; test valid cases
+
+  (pretty-print
+   (let*-values ()
+     (list a b)))
+
+  (pretty-print
+   (let*-values ((()        (values)))
+     (list a b)))
+
+  (pretty-print
+   (let*-values (((a)       (+ a b)))
+     (list a b)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22)))
+     (list a b)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 (()        (values))
+                 ((x y)     (values a (list b))))
+     (list a b x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c)       (+ a b))
+                 ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c d)     (values (+ a b) (- a b)))
+                 ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 (c         (values))
+                 ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 (c         (+ a b))
+                 ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 (c         (values (+ a b) (- a b)))
+                 ((x y)     (values a (list b c))))
+     (list a b c x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c . d)   (+ a b))
+                 ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c . d)   (values (+ a b) (- a b)))
+                 ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c . d)   (values (+ a b) (- a b) (vector a b)))
+                 ((x y)     (values a (list b c d))))
+     (list a b c d x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c d . e) (values (+ a b) (- a b)))
+                 ((x y)     (values a (list b c d e))))
+     (list a b c d e x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c d . e) (values (+ a b) (- a b) (vector a b)))
+                 ((x y)     (values a (list b c d e))))
+     (list a b c d e x y)))
+
+  (pretty-print
+   (let*-values (((a b)     (values 11 22))
+                 ((c d . e) (values (+ a b) (- a b) (vector a b) (cons a b)))
+                 ((x y)     (values a (list b c d e))))
+     (list a b c d e x y)))
+
+  ;; tests that raise wrong-number-of-values exception
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   (()        1111)
+                   ((x y)     (values 88 99)))
+       (list a b x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   (()        (values 1111 2222))
+                   ((x y)     (values 88 99)))
+       (list a b x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c)       (values))
+                   ((x y)     (values 88 99)))
+       (list a b c x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c)       (values 1111 2222))
+                   ((x y)     (values 88 99)))
+       (list a b c x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c d)     (values))
+                   ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c d)     1111)
+                   ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c d)     (values 1111 2222 3333))
+                   ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c . d)   (values))
+                   ((x y)     (values 88 99)))
+       (list a b c d x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c d . e) (values))
+                   ((x y)     (values 88 99)))
+       (list a b c d e x y))))
+
+  (must-raise-wrong-number-of-values-exception
+   (lambda ()
+     (let*-values (((a b)     (values 11 22))
+                   ((c d . e) 1111)
+                   ((x y)     (values 88 99)))
+       (list a b c d e x y)))))
+
+;------------------------------------------------------------------------------
+
 (define heartbeat-interval
   (let ((v (f64vector 0.0)))
     (##set-heartbeat-interval! 0.001) ;; set small heartbeat interval
@@ -1998,6 +2366,7 @@
 (test4)
 (test5)
 (test6)
+(test7)
 
 (force-output)
 
