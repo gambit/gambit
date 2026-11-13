@@ -7939,7 +7939,7 @@ ___ps->saved[1] = x;
 ___ps->saved[2] = complement;
 n = ___INT(k);
 
-if (n > ___CAST(___WORD, ___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
+if (n > ___CAST_WORD(___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
@@ -7982,7 +7982,7 @@ else
         else
           {
 #if ___BIG_ABASE_WIDTH == 64 && ___WS == 4
-            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
+            result = ___SUBTYPED_FROM_BODY(___CAST_WORD(___hp+___SUBTYPED_BODY+1)&~7);
 #else
             result = ___SUBTYPED_FROM_START(___hp);
 #endif

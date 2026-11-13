@@ -1378,7 +1378,7 @@ ___SIZE_TS n;
 ___SCMOBJ result;
 ___POP_ARGS5(flags,count,min_count,free,size);
 n = ___GCHASHTABLE_KEY0 + (___INT(size) << 1);
-if (___INT(size) > ((___CAST(___WORD, ___LMASK>>(___LF+___LWS)) - ___GCHASHTABLE_KEY0) >> 1))
+if (___INT(size) > ((___CAST_WORD(___LMASK>>(___LF+___LWS)) - ___GCHASHTABLE_KEY0) >> 1))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {

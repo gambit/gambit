@@ -988,100 +988,100 @@ end-of-code
               (case name
                 ((vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___VECTORELEM(___ARG1,___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___VECTORELEM(___ARG4,___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___VECTORELEM(___ARG1,___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___VECTORELEM(___ARG4,___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___WS;
 end-of-code
 )
                 ((string)
 #<<end-of-code
   void *src =
-        ___CAST(void*,
-                ___CS_SELECT(&___FETCH_U8(___BODY(___ARG1),___INT(___ARG2)),
-                             &___FETCH_U16(___BODY(___ARG1),___INT(___ARG2)),
-                             &___FETCH_U32(___BODY(___ARG1),___INT(___ARG2))));
+        ___CAST_VOIDPTR(
+          ___CS_SELECT(&___FETCH_U8(___BODY(___ARG1),___INT(___ARG2)),
+                       &___FETCH_U16(___BODY(___ARG1),___INT(___ARG2)),
+                       &___FETCH_U32(___BODY(___ARG1),___INT(___ARG2))));
   void *dst =
-        ___CAST(void*,
-                ___CS_SELECT(&___FETCH_U8(___BODY(___ARG4),___INT(___ARG5)),
-                             &___FETCH_U16(___BODY(___ARG4),___INT(___ARG5)),
-                             &___FETCH_U32(___BODY(___ARG4),___INT(___ARG5))));
+        ___CAST_VOIDPTR(
+          ___CS_SELECT(&___FETCH_U8(___BODY(___ARG4),___INT(___ARG5)),
+                       &___FETCH_U16(___BODY(___ARG4),___INT(___ARG5)),
+                       &___FETCH_U32(___BODY(___ARG4),___INT(___ARG5))));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___CS;
 end-of-code
 )
                 ((s8vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S8(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_S8(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_S8(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S8);
 end-of-code
 )
                 ((u8vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U8(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_U8(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_U8(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U8);
 end-of-code
 )
                 ((s16vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S16(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_S16(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_S16(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S16);
 end-of-code
 )
                 ((u16vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U16(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_U16(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_U16(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U16);
 end-of-code
 )
                 ((s32vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S32(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_S32(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_S32(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S32);
 end-of-code
 )
                 ((u32vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U32(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_U32(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_U32(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U32);
 end-of-code
 )
                 ((s64vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S64(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_S64(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_S64(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S64);
 end-of-code
 )
                 ((u64vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U64(___BODY(___ARG1),___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___ARG4),___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FETCH_U64(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FETCH_U64(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U64);
 end-of-code
 )
                 ((f32vector)
 #<<end-of-code
-  void *src = ___CAST(void*,___CAST(___F32*,___BODY(___ARG1))+___INT(___ARG2));
-  void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___ARG4))+___INT(___ARG5));
+  void *src = ___CAST_VOIDPTR(___CAST(___F32*,___BODY(___ARG1))+___INT(___ARG2));
+  void *dst = ___CAST_VOIDPTR(___CAST(___F32*,___BODY(___ARG4))+___INT(___ARG5));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___F32);
 end-of-code
 )
                 ((f64vector)
 #<<end-of-code
-  void *src = ___CAST(void*,___CAST(___F64*,___BODY(___ARG1))+___INT(___ARG2));
-  void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___ARG4))+___INT(___ARG5));
+  void *src = ___CAST_VOIDPTR(___CAST(___F64*,___BODY(___ARG1))+___INT(___ARG2));
+  void *dst = ___CAST_VOIDPTR(___CAST(___F64*,___BODY(___ARG4))+___INT(___ARG5));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___F64);
 end-of-code
 )
                 ((values)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FIELD(BOXVALUES,___ARG1,___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FIELD(BOXVALUES,___ARG4,___INT(___ARG5)));
+  void *src = ___CAST_VOIDPTR(&___FIELD(BOXVALUES,___ARG1,___INT(___ARG2)));
+  void *dst = ___CAST_VOIDPTR(&___FIELD(BOXVALUES,___ARG4,___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___WS;
 end-of-code
 ))

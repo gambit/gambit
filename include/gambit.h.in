@@ -977,19 +977,19 @@
 /*
  * Size of pointers.
  *
- * ___VOIDSTAR_WIDTH must be equal to sizeof(void*) * ___CHAR_WIDTH.
+ * ___VOIDPTR_WIDTH must be equal to sizeof(void*) * ___CHAR_WIDTH.
  * This value can't be computed with the "sizeof" operator because it
  * must be known at macro expansion time.  If in doubt just do
  *
- *  #define ___VOIDSTAR_WIDTH ___LONG_WIDTH
+ *  #define ___VOIDPTR_WIDTH ___LONG_WIDTH
  *
  */
 
-#ifndef ___VOIDSTAR_WIDTH
-#define ___VOIDSTAR_WIDTH @CONF_VOIDSTAR_WIDTH@
+#ifndef ___VOIDPTR_WIDTH
+#define ___VOIDPTR_WIDTH @CONF_VOIDPTR_WIDTH@
 #endif
 
-#if ___VOIDSTAR_WIDTH == 32
+#if ___VOIDPTR_WIDTH == 32
 #undef ___USE_32_BIT_ADDR
 #define ___USE_32_BIT_ADDR
 #endif
@@ -2017,8 +2017,13 @@
 
 #define ___CAST(type,val)((type)(val))
 
-#define ___FETCH_WORD(base,i)*(___CAST(___WORD*,base)+(i))
-#define ___STORE_WORD(base,i,val)*(___CAST(___WORD*,base)+(i)) = (val)
+#define ___CAST_WORD(val)___CAST(___WORD,val)
+#define ___CAST_UWORD(val)___CAST(___UWORD,val)
+#define ___CAST_WORDPTR(val)___CAST(___WORD*,val)
+#define ___CAST_VOIDPTR(val)___CAST(void*,val)
+
+#define ___FETCH_WORD(base,i)*(___CAST_WORDPTR(base)+(i))
+#define ___STORE_WORD(base,i,val)*(___CAST_WORDPTR(base)+(i)) = (val)
 
 /*
  * Macros to access ___S64 and ___U64 data types.  Note that ___S64
@@ -2395,26 +2400,26 @@ ___STORE_U8(base,i,val), \
 ___STORE_U16(base,i,val), \
 ___STORE_U32(base,i,val))
 
-#if ___WORD_WIDTH == ___VOIDSTAR_WIDTH
+#if ___WORD_WIDTH == ___VOIDPTR_WIDTH
 #define ___FAKEWORD ___WORD*
-#define ___CAST_FAKEWORD_TO_WORD(x)___CAST(___WORD,x)
-#define ___CAST_WORDSTAR_TO_FAKEWORD(x)x
+#define ___CAST_FAKEWORD_TO_WORD(x)___CAST_WORD(x)
+#define ___CAST_WORDPTR_TO_FAKEWORD(x)x
 #define ___FAKEHOST ___host
 #define ___CAST_HOST_TO_FAKEHOST(x)x
 #define ___CAST_FAKEHOST_TO_HOST(x)x
-#define ___FAKEVOIDSTAR void*
-#define ___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(x)___CAST(___FAKEVOIDSTAR,x)
-#define ___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(x)___CAST(void*,x)
+#define ___FAKEVOIDPTR void*
+#define ___CAST_VOIDPTR_TO_FAKEVOIDPTR(x)___CAST(___FAKEVOIDPTR,x)
+#define ___CAST_FAKEVOIDPTR_TO_VOIDPTR(x)___CAST_VOIDPTR(x)
 #else
 #define ___FAKEWORD ___WORD
 #define ___CAST_FAKEWORD_TO_WORD(x)x
-#define ___CAST_WORDSTAR_TO_FAKEWORD(x)___CAST(___WORD,x)
+#define ___CAST_WORDPTR_TO_FAKEWORD(x)___CAST_WORD(x)
 #define ___FAKEHOST ___WORD
-#define ___CAST_HOST_TO_FAKEHOST(x)___CAST(___WORD,x)
+#define ___CAST_HOST_TO_FAKEHOST(x)___CAST_WORD(x)
 #define ___CAST_FAKEHOST_TO_HOST(x)___CAST(___host,x)
-#define ___FAKEVOIDSTAR ___WORD
-#define ___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(x)___CAST(___WORD,x)
-#define ___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(x)___CAST(void*,x)
+#define ___FAKEVOIDPTR ___WORD
+#define ___CAST_VOIDPTR_TO_FAKEVOIDPTR(x)___CAST_WORD(x)
+#define ___CAST_FAKEVOIDPTR_TO_VOIDPTR(x)___CAST_VOIDPTR(x)
 #endif
 
 /* Padding at end of objects so that they can be aligned to an address */
@@ -2594,18 +2599,18 @@ ___STORE_U32(base,i,val))
 
 #ifdef ___NAN_BOXING
 
-#define ___NAN_BOXING_BIAS (___CAST(___UWORD,1)<<47)
+#define ___NAN_BOXING_BIAS (___CAST_UWORD(1)<<47)
 
 #define ___DOUBLE_BIAS_ADD(x) \
-___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
+___CAST_WORD(___CAST(___U64,x) + ___NAN_BOXING_BIAS)
 
 #define ___DOUBLE_BIAS_SUB(x) \
 (___CAST(___U64,x) - ___NAN_BOXING_BIAS)
 
-#define ___IS_DOUBLE(obj) (((___CAST(___UWORD,obj)+___NAN_BOXING_BIAS)&~___MASK(___UWORD,48))!=0)
+#define ___IS_DOUBLE(obj) (((___CAST_UWORD(obj)+___NAN_BOXING_BIAS)&~___MASK(___UWORD,48))!=0)
 
 #define ___HAS_TAG_AND_IS_NOT_DOUBLE(obj, tag, tb) \
-(((___CAST(___UWORD,obj) + (___NAN_BOXING_BIAS + (1<<tb) - (tag))) & \
+(((___CAST_UWORD(obj) + (___NAN_BOXING_BIAS + (1<<tb) - (tag))) & \
  ~(___MASK(___UWORD,48)-___MASK(___UWORD,tb))) == 0)
 
 #define ___IS_DOUBLE_OR(obj, x) (___IS_DOUBLE(obj) || (x))
@@ -2631,7 +2636,7 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 
 #endif
 
-#define ___W(x)___CAST(___WORD,x)
+#define ___W(x)___CAST_WORD(x)
 #define ___FW(x)___CAST(___FIXWORD,x)
 #define ___UFW(x)___CAST(___UFIXWORD,x)
 
@@ -2680,7 +2685,7 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 #if ___FLONUM_SELF_TAGGING_TAGS <= 2
 
 #define ___MEM_ALLOCATED(obj) ((obj)&1)
-#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST(___WORD,1))
+#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST_WORD(1))
 #define ___MEM_ALLOCATED_SET(obj) ((obj)|1)
 
 #elif ___FLONUM_SELF_TAGGING_TAGS == 3
@@ -2698,7 +2703,7 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 #else
 
 #define ___MEM_ALLOCATED(obj) ___TESTMASK(obj,3,1)
-#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST(___WORD,1))
+#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST_WORD(1))
 #define ___MEM_ALLOCATED_SET(obj) ((obj)|1)
 
 #endif
@@ -2713,7 +2718,7 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 
 #ifndef ___MEM_ALLOCATED
 #define ___MEM_ALLOCATED(obj) ___HAS_TAG_AND_IS_NOT_DOUBLE(obj, 1, 1)
-#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST(___WORD,1))
+#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST_WORD(1))
 #define ___MEM_ALLOCATED_SET(obj) ((obj)|1)
 #endif
 
@@ -3002,8 +3007,8 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 #define ___REST     ___SPECIAL(-11)
 #define ___UNUSED   ___SPECIAL(-14)
 #define ___DELETED  ___SPECIAL(-15)
-#define ___SPECIAL(x)___CAST(___WORD,(___CAST(___UWORD,x)<<___TB)+___tSPECIAL)
-#define ___FIX(x)___CAST(___WORD,___CAST(___UWORD,x)<<___TB_FIXNUM)
+#define ___SPECIAL(x)___CAST_WORD((___CAST_UWORD(x)<<___TB)+___tSPECIAL)
+#define ___FIX(x)___CAST_WORD(___CAST_UWORD(x)<<___TB_FIXNUM)
 #define ___CHR(x)___SPECIAL(___CS_SELECT(___CAST_U8(x),___CAST_U16(x),___CAST_U32(x)))
 
 #define ___SYM(i,id)___CAST_FAKEWORD_TO_WORD(___symtbl[i])
@@ -3037,7 +3042,7 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 #endif
 #define ___REF_CHR(x)___CHR(x)
 
-#define ___REF_MEM(x,tag)___CAST(___WORD,(___CAST(___UWORD,x)<<___TB)+tag)
+#define ___REF_MEM(x,tag)___CAST_WORD((___CAST_UWORD(x)<<___TB)+tag)
 
 #define ___REF_SYM(i,id)___REF_MEM(-1-i,___tMEM2)
 #define ___REF_KEY(i,id)___REF_MEM(-1-i,___tMEM1)
@@ -3067,10 +3072,10 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 #define ___FIX_WIDTH (___SCMOBJ_WIDTH-___TB_FIXNUM)
 #endif
 
-#define ___MIN_FIX (-(___CAST(___WORD,1)<<(___FIX_WIDTH-1)))
-#define ___MAX_FIX ((___CAST(___WORD,1)<<(___FIX_WIDTH-1))-1)
+#define ___MIN_FIX (-(___CAST_WORD(1)<<(___FIX_WIDTH-1)))
+#define ___MAX_FIX ((___CAST_WORD(1)<<(___FIX_WIDTH-1))-1)
 
-#define ___MAX_FIX32 ((___CAST(___WORD,1)<<(32-2-1))-1)
+#define ___MAX_FIX32 ((___CAST_WORD(1)<<(32-2-1))-1)
 
 #define ___FIXNUM_WIDTH ___FIX(___FIX_WIDTH)
 #define ___FIXNUM_WIDTH_NEG ___FIX(-___FIX_WIDTH)
@@ -3120,8 +3125,8 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 #define ___SUBTYPED_BODY 2
 #define ___VECTOR_BODY   2
 #define ___FLONUM_BODY   2
-#define ___BODY(obj)___CAST(___WORD*,___BODY0(obj)[-2])
-#define ___BODY_AS(obj,tag)___CAST(___WORD*,___BODY0_AS(obj,tag)[-2])
+#define ___BODY(obj)___CAST_WORDPTR(___BODY0(obj)[-2])
+#define ___BODY_AS(obj,tag)___CAST_WORDPTR(___BODY0_AS(obj,tag)[-2])
 #else
 #define ___PAIR_BODY     1
 #define ___SUBTYPED_BODY 1
@@ -3132,14 +3137,14 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 #endif
 
 #define ___ALIGNUP(x,mult) \
-___CAST(___WORD*,(___CAST(___WORD,x)+((mult)-1))&~((mult)-1))
+___CAST_WORDPTR((___CAST_WORD(x)+((mult)-1))&~((mult)-1))
 
 #define ___ALLOC(n) ___hp += (n)
 
 #if ___WORD_WIDTH == 32
 
 #define ___ALLOC_ALIGN64(n) \
-___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
+___hp = ___CAST_WORDPTR((___CAST_WORD(___hp) + (((n)<<___LWS) + 7)) & ~7)
 
 #else
 
@@ -3169,7 +3174,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___GET_FLONUM()___FLONUM_FROM_END(___hp)
 
 #define ___PAIR_FROM(ptr,n) \
-___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tPAIR)
+___TAG(___CAST_WORDPTR(ptr) - (___REFERENCE_TO_BODY+(n)), ___tPAIR)
 #define ___PAIR_FROM_START(ptr)___PAIR_FROM(ptr,-___PAIR_BODY)
 #define ___PAIR_FROM_END(ptr)___PAIR_FROM(ptr,___PAIR_SIZE)
 #define ___PAIR_FROM_BODY(ptr)___PAIR_FROM(ptr,0)
@@ -3180,7 +3185,7 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tPAIR)
 #define ___PAIR_TO_BODY(obj)___PAIR_TO(obj,0)
 
 #define ___SUBTYPED_FROM(ptr,n) \
-___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tSUBTYPED)
+___TAG(___CAST_WORDPTR(ptr) - (___REFERENCE_TO_BODY+(n)), ___tSUBTYPED)
 #define ___SUBTYPED_FROM_START(ptr)___SUBTYPED_FROM(ptr,-___SUBTYPED_BODY)
 #define ___SUBTYPED_FROM_END(ptr,n)___SUBTYPED_FROM(ptr,n)
 #define ___SUBTYPED_FROM_BODY(ptr)___SUBTYPED_FROM(ptr,0)
@@ -3191,7 +3196,7 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tSUBTYPED)
 #define ___SUBTYPED_TO_BODY(obj)___SUBTYPED_TO(obj,0)
 
 #define ___FLONUM_FROM(ptr,n) \
-___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tFLONUM)
+___TAG(___CAST_WORDPTR(ptr) - (___REFERENCE_TO_BODY+(n)), ___tFLONUM)
 #define ___FLONUM_FROM_START(ptr)___FLONUM_FROM(ptr,-___FLONUM_BODY)
 #define ___FLONUM_FROM_END(ptr)___FLONUM_FROM(ptr,___FLONUM_SIZE)
 #define ___FLONUM_FROM_BODY(ptr)___FLONUM_FROM(ptr,0)
@@ -3202,7 +3207,7 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tFLONUM)
 #define ___FLONUM_TO_BODY(obj)___FLONUM_TO(obj,0)
 
 #define ___VECTOR_FROM(ptr,n) \
-___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
+___TAG(___CAST_WORDPTR(ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 #define ___VECTOR_FROM_START(ptr)___VECTOR_FROM(ptr,-___VECTOR_BODY)
 #define ___VECTOR_FROM_END(ptr,n)___VECTOR_FROM(ptr,n)
 #define ___VECTOR_FROM_BODY(ptr)___VECTOR_FROM(ptr,0)
@@ -3212,9 +3217,9 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 #define ___VECTOR_TO_END(obj,n)___VECTOR_TO(obj,n)
 #define ___VECTOR_TO_BODY(obj)___VECTOR_TO(obj,0)
 
-#define ___TAG(ptr,tag)(___CAST(___WORD,ptr)+(tag))
-#define ___UNTAG(obj)___CAST(___WORD*,(obj)&~___TMASK)
-#define ___UNTAG_AS(obj,tag)___CAST(___WORD*,(obj)-(tag))
+#define ___TAG(ptr,tag)(___CAST_WORD(ptr)+(tag))
+#define ___UNTAG(obj)___CAST_WORDPTR((obj)&~___TMASK)
+#define ___UNTAG_AS(obj,tag)___CAST_WORDPTR((obj)-(tag))
 
 #define ___TYP(x)((x)&___TMASK)
 #define ___TESTMASK(x,mask,val)(((___CAST_U32(x)-(val))&(mask))==0)
@@ -3237,12 +3242,12 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 
 #define ___MAKE_HD(bytes,subtype,tag)(((bytes)<<___LF)+((subtype)<<___HTB)+(tag))
 #define ___HD_TYP(head)((head)&___HTMASK)
-#define ___HD_BYTES(head)(___CAST(___UWORD,head)>>___LF)
-#define ___HD_WORDS(head)(((___CAST(___UWORD,head)+((___WS-1)<<___LF)))>>(___LF+___LWS))
-#define ___HD_FIELDS(head)(___CAST(___UWORD,head)>>(___LF+___LWS))
+#define ___HD_BYTES(head)(___CAST_UWORD(head)>>___LF)
+#define ___HD_WORDS(head)(((___CAST_UWORD(head)+((___WS-1)<<___LF)))>>(___LF+___LWS))
+#define ___HD_FIELDS(head)(___CAST_UWORD(head)>>(___LF+___LWS))
 
 #if ___LWS >= ___TB_FIXNUM
-#define ___HD_FIELDS_FIX(head)(___CAST(___UWORD,head)>>(___LF+___LWS-___TB_FIXNUM))
+#define ___HD_FIELDS_FIX(head)(___CAST_UWORD(head)>>(___LF+___LWS-___TB_FIXNUM))
 #else
 #define ___HD_FIELDS_FIX(head)___FIX(___HD_FIELDS(head))
 #endif
@@ -3327,7 +3332,7 @@ ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___
 
 #define ___FLO_CONST(sub,hi,lo) \
 (___SELF_TAGGED_FLONUM(((___CAST(___U32,hi)>>(___SELF_TAGGED_FLONUM_SHIFT1-32))+___SELF_TAGGED_FLONUM_OFFSET)>>___SELF_TAGGED_FLONUM_SHIFT2) \
- ? ___CAST(___WORD,___ROTR64(___ROTR64((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___CAST(___U32,lo)),___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET,___SELF_TAGGED_FLONUM_SHIFT2)) \
+ ? ___CAST_WORD(___ROTR64(___ROTR64((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___CAST(___U32,lo)),___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET,___SELF_TAGGED_FLONUM_SHIFT2)) \
  : sub)
 
 #define ___F64UNBOX(x) \
@@ -3345,7 +3350,7 @@ ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___
 #define ___F64BOX(x) \
 ({___U64 ___u64_x = ___F64_TO_U64_FOR_SELF_TAGGING(x); \
   ___EXPECT_TRUE(___SELF_TAGGED_FLONUM(___u64_x)) \
-  ? ___CAST(___WORD,___u64_x) \
+  ? ___CAST_WORD(___u64_x) \
   : ___MEM_ALLOCATED_FLONUM_ALLOC(x);})
 
 #define ___F64_TO_U64_FOR_SELF_TAGGING(x) \
@@ -3898,7 +3903,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #else
 
 #define ___TYPE(x)(___FIXNUMP(x) ? ___FIX(___tFIXNUM) : ___FIX(___TYP(x)))
-#define ___TYPECAST(x,y)(___FIXNUMP(x) ? ((y)==___FIX(___tFIXNUM) ? (x) : ___CAST(___WORD,(___CAST(___UWORD,___INT(x))<<___TB)+___INT(y))) : ((y)==___FIX(___tFIXNUM) ? (___INT(x)<<___TB)+___INT(y) : ((x)&~___TMASK)+___INT(y)))
+#define ___TYPECAST(x,y)(___FIXNUMP(x) ? ((y)==___FIX(___tFIXNUM) ? (x) : ___CAST_WORD((___CAST_UWORD(___INT(x))<<___TB)+___INT(y))) : ((y)==___FIX(___tFIXNUM) ? (___INT(x)<<___TB)+___INT(y) : ((x)&~___TMASK)+___INT(y)))
 
 #endif
 
@@ -4209,13 +4214,13 @@ ___IS_DOUBLE_OR(obj, \
 
 /* Indexing arrays with a fixnum index */
 
-#define ___FXINDX_SH0(base,i,type) ___CAST(type*,___CAST(___WORD,base)+(i))
+#define ___FXINDX_SH0(base,i,type) ___CAST(type*,___CAST_WORD(base)+(i))
 
 #define ___FXINDX_SHL(base,i,type,shift) \
-___FXINDX_SH0(base,___CAST(___UWORD,i)<<(shift-___TB_FIXNUM),type)
+___FXINDX_SH0(base,___CAST_UWORD(i)<<(shift-___TB_FIXNUM),type)
 
 #define ___FXINDX_SHR(base,i,type,shift) \
-___FXINDX_SH0(base,___CAST(___UWORD,i)>>(___TB_FIXNUM-shift),type)
+___FXINDX_SH0(base,___CAST_UWORD(i)>>(___TB_FIXNUM-shift),type)
 
 /* Macros to index ___WORD arrays using a fixnum index. */
 
@@ -4422,10 +4427,10 @@ ___EXPECT_FALSE(__builtin_add_overflow(___FW(x),___FW(y),&var))
  ? (x) \
  : (y)>___FIX(0) \
    ? (___EXPECT_TRUE(___FIXLE(x,___FIXSUB(___FIX(___MAX_FIX),y))) \
-     ? ___FIXADD(x,y) \
+     ? ___FIXWRAPADD(x,y) \
      : ___FAL) \
    : ___EXPECT_TRUE(___FIXGE(x,___FIXSUB(___FIX(___MIN_FIX),y))) \
-     ? ___FIXADD(x,y) \
+     ? ___FIXWRAPADD(x,y) \
      : ___FAL)
 
 #define ___FIXADDPCONSTY_NOTFALSEP(var,x,y) \
@@ -4433,10 +4438,10 @@ ___EXPECT_FALSE(__builtin_add_overflow(___FW(x),___FW(y),&var))
  ? (var=(x),1) \
  : (y)>___FIX(0) \
    ? (___EXPECT_TRUE(___FIXLE(x,___FIXSUB(___FIX(___MAX_FIX),y))) \
-     ? (var=___FIXADD(x,y),1) \
+     ? (var=___FIXWRAPADD(x,y),1) \
      : 0) \
    : ___EXPECT_TRUE(___FIXGE(x,___FIXSUB(___FIX(___MIN_FIX),y))) \
-     ? (var=___FIXADD(x,y),1) \
+     ? (var=___FIXWRAPADD(x,y),1) \
      : 0)
 
 #define ___FIXADDPCONSTX(x,y) ___FIXADDPCONSTY(y,x)
@@ -4484,12 +4489,12 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
    ? ((y)==___FIX(1) \
       ? (x) \
       : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MIN_FIX/___INT(y)),___FIX(___MAX_FIX/___INT(y)))) \
-        ? ___FIXMUL(x,y) \
+        ? ___FIXWRAPMUL(x,y) \
         : ___FAL) \
    : (y)==___FIX(-1) \
      ? ___FIXNEGP(x) \
      : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MAX_FIX/___INT(y)),___FIX(___MIN_FIX/___INT(y)))) \
-       ? ___FIXMUL(x,y) \
+       ? ___FIXWRAPMUL(x,y) \
        : ___FAL)
 
 #define ___FIXMULPCONSTY_NOTFALSEP(var,x,y) \
@@ -4499,12 +4504,12 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
    ? ((y)==___FIX(1) \
       ? (var=(x),1) \
       : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MIN_FIX/___INT(y)),___FIX(___MAX_FIX/___INT(y)))) \
-        ? (var=___FIXMUL(x,y),1) \
+        ? (var=___FIXWRAPMUL(x,y),1) \
         : 0) \
    : (y)==___FIX(-1) \
      ? (var=___FIXNEGP(x),1) \
      : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MAX_FIX/___INT(y)),___FIX(___MIN_FIX/___INT(y)))) \
-       ? (var=___FIXMUL(x,y),1) \
+       ? (var=___FIXWRAPMUL(x,y),1) \
        : 0)
 
 #define ___FIXMULPCONSTX(x,y) ___FIXMULPCONSTY(y,x)
@@ -4515,7 +4520,7 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
 #define ___FIXSQUARE(x)___FIXMUL(x,x)
 
 #define ___FIXSQUAREP_NOTFALSEP(var,x) \
-(___EXPECT_FALSE(___UFW(x)+___UFW(___FIX(___SQRT_MAX_FIX))>(___UFW(___FIX(___SQRT_MAX_FIX))<<1)) ? 0 : (var=___FIXSQUARE(x),1))
+(___EXPECT_FALSE(___UFW(x)+___UFW(___FIX(___SQRT_MAX_FIX))>(___UFW(___FIX(___SQRT_MAX_FIX))<<1)) ? 0 : (var=___FIXWRAPSQUARE(x),1))
 
 #define ___FIXSQUAREP(x)(___FIXSQUAREP_NOTFALSEP(___temp,x)?___temp:___FAL)
 
@@ -4524,10 +4529,10 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
 #define ___FIXNEG(x)___W(-___FW(x))
 
 #define ___FIXNEGP_NOTFALSEP(var,x) \
-(___EXPECT_FALSE((x)==___FIX(___MIN_FIX)) ? 0 : (var=___FIXNEG(x),1))
+(___EXPECT_FALSE((x)==___FIX(___MIN_FIX)) ? 0 : (var=___FIXWRAPNEG(x),1))
 
 #define ___FIXNEGP(x) \
-(___EXPECT_FALSE((x)==___FIX(___MIN_FIX)) ? ___FAL : ___FIXNEG(x))
+(___EXPECT_FALSE((x)==___FIX(___MIN_FIX)) ? ___FAL : ___FIXWRAPNEG(x))
 
 
 #define ___FIXWRAPSUB(x,y)___W(___FW(___UFW(x)-___UFW(y)))
@@ -4565,10 +4570,10 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
  ? (x) \
  : (y)>___FIX(0) \
    ? (___EXPECT_TRUE(___FIXGE(x,___FIXADD(___FIX(___MIN_FIX),y))) \
-     ? ___FIXSUB(x,y) \
+     ? ___FIXWRAPSUB(x,y) \
      : ___FAL) \
    : ___EXPECT_TRUE(___FIXLE(x,___FIXADD(___FIX(___MAX_FIX),y))) \
-     ? ___FIXSUB(x,y) \
+     ? ___FIXWRAPSUB(x,y) \
      : ___FAL)
 
 #define ___FIXSUBPCONSTY_NOTFALSEP(var,x,y) \
@@ -4576,10 +4581,10 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
  ? (var=(x),1) \
  : (y)>___FIX(0) \
    ? (___EXPECT_TRUE(___FIXGE(x,___FIXADD(___FIX(___MIN_FIX),y))) \
-     ? (var=___FIXSUB(x,y),1) \
+     ? (var=___FIXWRAPSUB(x,y),1) \
      : 0) \
    : ___EXPECT_TRUE(___FIXLE(x,___FIXADD(___FIX(___MAX_FIX),y))) \
-     ? (var=___FIXSUB(x,y),1) \
+     ? (var=___FIXWRAPSUB(x,y),1) \
      : 0)
 
 
@@ -4591,7 +4596,7 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
 #define ___FIXQUO(x,y)___FIX(((x)/(y)))
 #define ___FIXQUOCONSTY(x,y)___FIXQUO(x,y)
 
-#define ___FIXREM(x,y)___CAST(___WORD,(x)%(y))
+#define ___FIXREM(x,y)___CAST_WORD((x)%(y))
 #define ___FIXREMCONSTY(x,y)___FIXREM(x,y)
 
 #else
@@ -4605,19 +4610,19 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
  * division, define ___HAVE_FAST_DIV64 when compiling the C code.
  */
 
-#define ___S64_FITS_IN_S32(x)(___CAST(___UWORD,((x)>>31)+1)<2)
+#define ___S64_FITS_IN_S32(x)(___CAST_UWORD(((x)>>31)+1)<2)
 
 #define ___FIXQUO(x,y) \
 (___S64_FITS_IN_S32(x) && ___S64_FITS_IN_S32(y) \
- ?___FIX(___CAST(___WORD,___CAST(___S32,x)/___CAST(___S32,y))) \
+ ?___FIX(___CAST_WORD(___CAST(___S32,x)/___CAST(___S32,y))) \
  :___FIX((x)/(y)))
 #define ___FIXQUOCONSTY(x,y) ___FIX((x)/(y))
 
 #define ___FIXREM(x,y) \
 (___S64_FITS_IN_S32(x) && ___S64_FITS_IN_S32(y) \
- ?___CAST(___WORD,___CAST(___S32,x)%___CAST(___S32,y))  \
- :___CAST(___WORD,(x)%(y)))
-#define ___FIXREMCONSTY(x,y) ___CAST(___WORD,(x)%(y))
+ ?___CAST_WORD(___CAST(___S32,x)%___CAST(___S32,y))  \
+ :___CAST_WORD((x)%(y)))
+#define ___FIXREMCONSTY(x,y) ___CAST_WORD((x)%(y))
 
 #endif
 
@@ -4633,18 +4638,18 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
  :___temp)
 
 
-#define ___FIXAND(x,y)((___WORD)((x)&(y)))
-#define ___FIXANDC1(x,y)((___WORD)(~(x)&(y)))
-#define ___FIXANDC2(x,y)((___WORD)((x)&~(y)))
-#define ___FIXEQV(x,y)((___WORD)(((x)^(y))^~___FMASK))
-#define ___FIXIOR(x,y)((___WORD)((x)|(y)))
-#define ___FIXNAND(x,y)((___WORD)(((x)&(y))^~___FMASK))
-#define ___FIXNOR(x,y)((___WORD)(((x)|(y))^~___FMASK))
-#define ___FIXNOT(x)((___WORD)((x)^~___FMASK))
-#define ___FIXORC1(x,y)((___WORD)(((x)^~___FMASK)|(y)))
-#define ___FIXORC2(x,y)((___WORD)((x)|((y)^~___FMASK)))
-#define ___FIXXOR(x,y)((___WORD)((x)^(y)))
-#define ___FIXIF(x,y,z)((___WORD)(((x)&(y))|(~(x)&(z))))
+#define ___FIXAND(x,y)___CAST_WORD((x)&(y))
+#define ___FIXANDC1(x,y)___CAST_WORD(~(x)&(y))
+#define ___FIXANDC2(x,y)___CAST_WORD((x)&~(y))
+#define ___FIXEQV(x,y)___CAST_WORD(((x)^(y))^~___FMASK)
+#define ___FIXIOR(x,y)___CAST_WORD((x)|(y))
+#define ___FIXNAND(x,y)___CAST_WORD(((x)&(y))^~___FMASK)
+#define ___FIXNOR(x,y)___CAST_WORD(((x)|(y))^~___FMASK)
+#define ___FIXNOT(x)___CAST_WORD((x)^~___FMASK)
+#define ___FIXORC1(x,y)___CAST_WORD(((x)^~___FMASK)|(y))
+#define ___FIXORC2(x,y)___CAST_WORD((x)|((y)^~___FMASK))
+#define ___FIXXOR(x,y)___CAST_WORD((x)^(y))
+#define ___FIXIF(x,y,z)___CAST_WORD(((x)&(y))|(~(x)&(z)))
 
 #define ___FIXWRAPABS(x)((x)<0?___FIXWRAPNEG(x):(x))
 #define ___FIXABS(x)((x)<0?___FIXNEG(x):(x))
@@ -4654,18 +4659,18 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
 #ifdef ___USE_builtin_popcount
 
 #if ___WORD_WIDTH == ___INT_WIDTH
-#define ___POPCOUNT_WORD_TEMP() __builtin_popcount(___CAST(___UWORD,___temp))
+#define ___POPCOUNT_WORD_TEMP() __builtin_popcount(___CAST_UWORD(___temp))
 #else
 #if ___WORD_WIDTH == ___LONG_WIDTH
-#define ___POPCOUNT_WORD_TEMP() __builtin_popcountl(___CAST(___UWORD,___temp))
+#define ___POPCOUNT_WORD_TEMP() __builtin_popcountl(___CAST_UWORD(___temp))
 #else
-#define ___POPCOUNT_WORD_TEMP() __builtin_popcountll(___CAST(___UWORD,___temp))
+#define ___POPCOUNT_WORD_TEMP() __builtin_popcountll(___CAST_UWORD(___temp))
 #endif
 #endif
 
 #else
 
-#define ___MASK_WORD_BYTEWISE(m) (~___CAST(___UWORD,0)/0xff*m)
+#define ___MASK_WORD_BYTEWISE(m) (~___CAST_UWORD(0)/0xff*m)
 
 #define ___POPCOUNT_WORD_TEMP() \
 (___temp-=(___temp>>1)&___MASK_WORD_BYTEWISE(0x55),  \
@@ -5483,7 +5488,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tBOXVALUES),___INT(i),val,___VALUESSIZE(v),__
 #define ___VECTORSHRINK(v,i)___temp=(v);___VECTOR_HEADER_SET(___temp,(___VECTOR_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+___LWS)));
 #define ___VECTORCAS(v,i,val,oldval)___COMPARE_AND_SWAP_WORD(___FXINDX_WORD(___BODY_AS(v,___tVECTOR),i),oldval,val)
 #define ___VECTORINC(v,i,val)___FETCH_AND_ADD_WORD(___FXINDX_WORD(___BODY_AS(v,___tVECTOR),i),val)
-#define ___VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___VECTORSIZE(v))
+#define ___VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___VECTORSIZE(v))
 
 #define ___MAKEVECTORSMALL1(size)___MAKEVECTORSMALL2(size,___FIX(0))
 #define ___MAKEVECTORSMALL2(size,fill) \
@@ -5508,7 +5513,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tVECTOR),___INT(i),val,___VECTORSIZE(v),___BE
 #define ___STRINGREF(v,i)___CHR(___FETCH_C_FX(___BODY_AS(v,___tSTRING),i))
 #define ___STRINGSET(v,i,val)___STORE_C_FX(___BODY_AS(v,___tSTRING),i,___ORD(val));
 #define ___STRINGSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+___LCS)));
-#define ___STRINGINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___STRINGSIZE(v))
+#define ___STRINGINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___STRINGSIZE(v))
 
 #define ___MAKESTRINGSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_STRING,___END_ALLOC_STRING,___ADD_STRING_ELEM_RAW,___GET_STRING)
@@ -5534,7 +5539,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tSTRING),___INT(i),___ORD(val),___STRINGSIZE(
 #define ___S8VECTORREF(v,i)___FIX(___FETCH_S8_FX(___BODY_AS(v,___tS8VECTOR),i))
 #define ___S8VECTORSET(v,i,val)___STORE_S8_FX(___BODY_AS(v,___tS8VECTOR),i,___INT(val));
 #define ___S8VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM)));
-#define ___S8VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___S8VECTORSIZE(v))
+#define ___S8VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___S8VECTORSIZE(v))
 
 #define ___MAKES8VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_S8VECTOR,___END_ALLOC_S8VECTOR,___ADD_S8VECTOR_ELEM_RAW,___GET_S8VECTOR)
@@ -5560,7 +5565,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tS8VECTOR),___INT(i),___INT(val),___S8VECTORS
 #define ___U8VECTORREF(v,i)___FIX(___FETCH_U8_FX(___BODY_AS(v,___tU8VECTOR),i))
 #define ___U8VECTORSET(v,i,val)___STORE_U8_FX(___BODY_AS(v,___tU8VECTOR),i,___INT(val));
 #define ___U8VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM)));
-#define ___U8VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___U8VECTORSIZE(v))
+#define ___U8VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___U8VECTORSIZE(v))
 
 #define ___MAKEU8VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_U8VECTOR,___END_ALLOC_U8VECTOR,___ADD_U8VECTOR_ELEM_RAW,___GET_U8VECTOR)
@@ -5586,7 +5591,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tU8VECTOR),___INT(i),___INT(val),___U8VECTORS
 #define ___S16VECTORREF(v,i)___FIX(___FETCH_S16_FX(___BODY_AS(v,___tS16VECTOR),i))
 #define ___S16VECTORSET(v,i,val)___STORE_S16_FX(___BODY_AS(v,___tS16VECTOR),i,___INT(val));
 #define ___S16VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+1)));
-#define ___S16VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___S16VECTORSIZE(v))
+#define ___S16VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___S16VECTORSIZE(v))
 
 #define ___MAKES16VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_S16VECTOR,___END_ALLOC_S16VECTOR,___ADD_S16VECTOR_ELEM_RAW,___GET_S16VECTOR)
@@ -5612,7 +5617,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tS16VECTOR),___INT(i),___INT(val),___S16VECTO
 #define ___U16VECTORREF(v,i)___FIX(___FETCH_U16_FX(___BODY_AS(v,___tU16VECTOR),i))
 #define ___U16VECTORSET(v,i,val)___STORE_U16_FX(___BODY_AS(v,___tU16VECTOR),i,___INT(val));
 #define ___U16VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+1)));
-#define ___U16VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___U16VECTORSIZE(v))
+#define ___U16VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___U16VECTORSIZE(v))
 
 #define ___MAKEU16VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_U16VECTOR,___END_ALLOC_U16VECTOR,___ADD_U16VECTOR_ELEM_RAW,___GET_U16VECTOR)
@@ -5640,7 +5645,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tU16VECTOR),___INT(i),___INT(val),___U16VECTO
 #define ___S32VECTORSET(v,i,val)___STORE_S32_FX(___BODY_AS(v,___tS32VECTOR),i,___S32UNBOX(val));
 #define ___S32VECTORSETFIX(v,i,val)___STORE_S32_FX(___BODY_AS(v,___tS32VECTOR),i,___INT(val));
 #define ___S32VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+2)));
-#define ___S32VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___S32VECTORSIZE(v))
+#define ___S32VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___S32VECTORSIZE(v))
 
 #define ___MAKES32VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_S32VECTOR,___END_ALLOC_S32VECTOR,___ADD_S32VECTOR_ELEM_RAW,___GET_S32VECTOR)
@@ -5667,7 +5672,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tS32VECTOR),___INT(i),___S32UNBOX(val),___S32
 #define ___U32VECTORSET(v,i,val)___STORE_U32_FX(___BODY_AS(v,___tU32VECTOR),i,___U32UNBOX(val));
 #define ___U32VECTORSETFIX(v,i,val)___STORE_U32_FX(___BODY_AS(v,___tU32VECTOR),i,___INT(val));
 #define ___U32VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+2)));
-#define ___U32VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___U32VECTORSIZE(v))
+#define ___U32VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___U32VECTORSIZE(v))
 
 #define ___MAKEU32VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_U32VECTOR,___END_ALLOC_U32VECTOR,___ADD_U32VECTOR_ELEM_RAW,___GET_U32VECTOR)
@@ -5695,7 +5700,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tU32VECTOR),___INT(i),___U32UNBOX(val),___U32
 #define ___S64VECTORSET(v,i,val)___STORE_S64_FX(___BODY_AS(v,___tS64VECTOR),i,___S64UNBOX(val));
 #define ___S64VECTORSETFIX(v,i,val)___STORE_S64_FX(___BODY_AS(v,___tS64VECTOR),i,___INT(val));
 #define ___S64VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+3)));
-#define ___S64VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___S64VECTORSIZE(v))
+#define ___S64VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___S64VECTORSIZE(v))
 
 #define ___MAKES64VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_S64VECTOR,___END_ALLOC_S64VECTOR,___ADD_S64VECTOR_ELEM_RAW,___GET_S64VECTOR)
@@ -5723,7 +5728,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tS64VECTOR),___INT(i),___S64UNBOX(val),___S64
 #define ___U64VECTORSET(v,i,val)___STORE_U64_FX(___BODY_AS(v,___tU64VECTOR),i,___U64UNBOX(val));
 #define ___U64VECTORSETFIX(v,i,val)___STORE_U64_FX(___BODY_AS(v,___tU64VECTOR),i,___INT(val));
 #define ___U64VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+3)));
-#define ___U64VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___U64VECTORSIZE(v))
+#define ___U64VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___U64VECTORSIZE(v))
 
 #define ___MAKEU64VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_U64VECTOR,___END_ALLOC_U64VECTOR,___ADD_U64VECTOR_ELEM_RAW,___GET_U64VECTOR)
@@ -5749,7 +5754,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tU64VECTOR),___INT(i),___U64UNBOX(val),___U64
 #define ___F32VECTORREF(v,i)___FETCH_F32_FX(___BODY_AS(v,___tF32VECTOR),i)
 #define ___F32VECTORSET(v,i,val)___STORE_F32_FX(___BODY_AS(v,___tF32VECTOR),i,val);
 #define ___F32VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+2)));
-#define ___F32VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___F32VECTORSIZE(v))
+#define ___F32VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___F32VECTORSIZE(v))
 
 #define ___MAKEF32VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_F32VECTOR,___END_ALLOC_F32VECTOR,___ADD_F32VECTOR_ELEM,___GET_F32VECTOR)
@@ -5775,7 +5780,7 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tF32VECTOR),___INT(i),___F64UNBOX(val),___F32
 #define ___F64VECTORREF(v,i)___FETCH_F64_FX(___BODY_AS(v,___tF64VECTOR),i)
 #define ___F64VECTORSET(v,i,val)___STORE_F64_FX(___BODY_AS(v,___tF64VECTOR),i,val);
 #define ___F64VECTORSHRINK(v,i)___temp=(v);___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+3)));
-#define ___F64VECTORINBOUNDSP(v,i)(___CAST(___UWORD,___INT(i))<___F64VECTORSIZE(v))
+#define ___F64VECTORINBOUNDSP(v,i)(___CAST_UWORD(___INT(i))<___F64VECTORSIZE(v))
 
 #define ___MAKEF64VECTORSMALL1(size) \
 ___MAKEVECTSMALLNOFILL(___INT(size),___BEGIN_ALLOC_F64VECTOR,___END_ALLOC_F64VECTOR,___ADD_F64VECTOR_ELEM,___GET_F64VECTOR)
@@ -6082,8 +6087,8 @@ ___FIELD(WEAK,gcht,___GCHASHTABLE_FREE)
 #define ___GCHASHTABLEREHASH(x,y)___EXT(___gc_hash_table_rehash)(x,y)
 
 #define ___GCHASHTABLELENGTH(gcht)___HD_FIELDS_FIX(___SUBTYPED_TO_BODY(gcht)[-1])
-#define ___GCHASHTABLEFIELDREF(gcht,i)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(gcht,___tWEAK))+((i)<<(___LWS-___TB_FIXNUM)))
-#define ___GCHASHTABLEFIELDSET(gcht,i,val)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(gcht,___tWEAK))+((i)<<(___LWS-___TB_FIXNUM)))=val;
+#define ___GCHASHTABLEFIELDREF(gcht,i)*___CAST_WORDPTR(___CAST_WORD(___BODY_AS(gcht,___tWEAK))+((i)<<(___LWS-___TB_FIXNUM)))
+#define ___GCHASHTABLEFIELDSET(gcht,i,val)*___CAST_WORDPTR(___CAST_WORD(___BODY_AS(gcht,___tWEAK))+((i)<<(___LWS-___TB_FIXNUM)))=val;
 
 #if ___WS == 4
 
@@ -6110,7 +6115,7 @@ do { \
 
 #define ___GCHASHTABLE_HASH_STEP_MOD(hash,step,obj,size) \
 do { \
-  hash = (___CAST(___UWORD,obj)>>___TB) % (size); \
+  hash = (___CAST_UWORD(obj)>>___TB) % (size); \
   step = 1; \
 } while (0)
 
@@ -6301,7 +6306,7 @@ ___TICKETLOCK_UNLOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,ob
 #endif
 
 #define ___FORBID_STACK_OVERFLOW_UNDO(fp) \
-___FP_SET_STK(fp,-___FIRST_BREAK_FRAME_STACK_MSECTION,___CAST(___WORD,___CAST(___msection*,0)))
+___FP_SET_STK(fp,-___FIRST_BREAK_FRAME_STACK_MSECTION,___CAST_WORD(___CAST(___msection*,0)))
 
 #define ___THREAD_SAVE \
 if (___R0 == ___ps->handler_break) \
@@ -6898,7 +6903,7 @@ ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LIN
 0}; \
 ___pc=___ps->pc; ___R_ALL ___start=___MLBL(___HOST_LBL0); \
 if (___EXPECT_FALSE(___pc == ___FIX(0))) { \
-  ___ps->pc = ___CAST(___WORD,___hlbltbl); \
+  ___ps->pc = ___CAST_WORD(___hlbltbl); \
   return; \
 }
 
@@ -8115,7 +8120,7 @@ ___ps->temp1=___SELF;___JUMPEXTPRM(___NOTHING,___ps->handler_not_proc)}
 {nargs ___SELF=___GLO(i,glo); \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
   ___JUMP(___LABEL_ENTRY_GET(___SELF)) \
-___ps->temp4=(___WORD)&___GLOSTRUCT(i,glo);___JUMPEXTPRM(___NOTHING,___ps->handler_not_proc_glo)}
+___ps->temp4=___CAST_WORD(&___GLOSTRUCT(i,glo));___JUMPEXTPRM(___NOTHING,___ps->handler_not_proc_glo)}
 
 #ifdef ___NOT_SAFE_CALLS
 #undef ___JUMPGENSAFE
@@ -8198,9 +8203,9 @@ ___JUMPEXTPRM(___NOTHING,___ps->handler_get_key_rest)}
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
 do { \
      /* generate x86-32 instruction: call lbl */ \
-     ___WORD dist = ___CAST(___WORD, \
-                            ___CAST(___UWORD,lbl) - \
-                            (___CAST(___UWORD,ptr) + ___WS + ___tSUBTYPED + 5)); \
+     ___WORD dist = ___CAST_WORD( \
+                      ___CAST_UWORD(lbl) - \
+                      (___CAST_UWORD(ptr) + ___WS + ___tSUBTYPED + 5)); \
      (ptr)[___LABEL_LOWLEVEL_CODE] = (0xe8L << (8*___tSUBTYPED)) \
                                      + (dist << (8*(___tSUBTYPED+1))); \
      (ptr)[___LABEL_LOWLEVEL_CODE+1] = (dist >> (8*(___WS-(___tSUBTYPED+1)))); \
@@ -8395,20 +8400,20 @@ ___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<2,___sU32VECTOR));
 #if ___WORD_WIDTH == 32
 
 #define ___BEGIN_ALLOC_S64VECTOR(n) \
-{___WORD *___ptr = (___WORD*)((___WORD)(___hp+2)&~7); \
+{___WORD *___ptr = ___CAST_WORDPTR(___CAST_WORD(___hp+2)&~7); \
 ___ptr[-1]=___MAKE_HD_BYTES(n<<3,___sS64VECTOR);
 #define ___ADD_S64VECTOR_ELEM_RAW(i,val)___STORE_S64(___ptr,i,val);
 #define ___ADD_S64VECTOR_ELEM(i,val)___ADD_S64VECTOR_ELEM_RAW(i,___S64UNBOX(val))
 #define ___END_ALLOC_S64VECTOR(n)___ALLOC(___WORDS(n<<3)+2);}
-#define ___GET_S64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
+#define ___GET_S64VECTOR(n)___TAG(((___CAST_WORDPTR(___CAST_WORD(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
 
 #define ___BEGIN_ALLOC_U64VECTOR(n) \
-{___WORD *___ptr = (___WORD*)((___WORD)(___hp+2)&~7); \
+{___WORD *___ptr = ___CAST_WORDPTR(___CAST_WORD(___hp+2)&~7); \
 ___ptr[-1]=___MAKE_HD_BYTES(n<<3,___sU64VECTOR);
 #define ___ADD_U64VECTOR_ELEM_RAW(i,val)___STORE_U64(___ptr,i,val);
 #define ___ADD_U64VECTOR_ELEM(i,val)___ADD_U64VECTOR_ELEM_RAW(i,___U64UNBOX(val))
 #define ___END_ALLOC_U64VECTOR(n)___ALLOC(___WORDS(n<<3)+2);}
-#define ___GET_U64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
+#define ___GET_U64VECTOR(n)___TAG(((___CAST_WORDPTR(___CAST_WORD(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
 
 #else
 
@@ -8441,11 +8446,11 @@ ___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<2,___sF32VECTOR));
 #if ___WORD_WIDTH == 32
 
 #define ___BEGIN_ALLOC_F64VECTOR(n) \
-{___WORD *___ptr = (___WORD*)((___WORD)(___hp+2)&~7); \
+{___WORD *___ptr = ___CAST_WORDPTR(___CAST_WORD(___hp+2)&~7); \
 ___ptr[-1]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___ADD_F64VECTOR_ELEM(i,val)((___F64*)___ptr)[i]=(val);
 #define ___END_ALLOC_F64VECTOR(n)___ALLOC(___WORDS(n<<3)+2);}
-#define ___GET_F64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
+#define ___GET_F64VECTOR(n)___TAG(((___CAST_WORDPTR(___CAST_WORD(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
 
 #else
 
@@ -8680,14 +8685,14 @@ extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 /* Use thread local storage getter/setter */
 
 #define ___GET_REAL_PSTATE() ___CAST(___processor_state,___EXT(___get_tls_ptr) ())
-#define ___SET_REAL_PSTATE(ps) ___set_tls_ptr(___CAST(void*,ps))
+#define ___SET_REAL_PSTATE(ps) ___set_tls_ptr(___CAST_VOIDPTR(ps))
 
 #else
 
 /* Use thread local storage class */
 
 #define ___GET_REAL_PSTATE() ___CAST(___processor_state,___tls_ptr)
-#define ___SET_REAL_PSTATE(ps) ___tls_ptr = ___CAST(void*,ps)
+#define ___SET_REAL_PSTATE(ps) ___tls_ptr = ___CAST_VOIDPTR(ps)
 
 #endif
 
@@ -8906,7 +8911,7 @@ ___LOCAL ___WORD ___cnstbl[]={
 
 #define ___BEGIN_SUB \
 ___LOCAL ___FAKEWORD ___subtbl[]={
-#define ___DEF_SUB(id)___CAST_WORDSTAR_TO_FAKEWORD(id)
+#define ___DEF_SUB(id)___CAST_WORDPTR_TO_FAKEWORD(id)
 #define ___END_SUB };
 
 #define ___DEF_SUB_VEC(id,n) \
@@ -8974,9 +8979,9 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #ifdef ___BIG_ENDIAN
 
-#define ___P4U8(a,b,c,d)((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
+#define ___P4U8(a,b,c,d)___CAST_WORD((((((___CAST_UWORD(___CAST_U8(a))<<8)+___CAST_UWORD(___CAST_U8(b)))<<8)+___CAST_UWORD(___CAST_U8(c)))<<8)+___CAST_UWORD(___CAST_U8(d)))
 
-#define ___P2U16(a,b)((___UWORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
+#define ___P2U16(a,b)___CAST_WORD((___CAST_UWORD(___CAST_U16(a))<<16)+___CAST_UWORD(___CAST_U16(b)))
 
 #define ___P1U32(a)a
 
@@ -8984,9 +8989,9 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #else
 
-#define ___P4U8(d,c,b,a)((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
+#define ___P4U8(d,c,b,a)___CAST_WORD((((((___CAST_UWORD(___CAST_U8(a))<<8)+___CAST_UWORD(___CAST_U8(b)))<<8)+___CAST_UWORD(___CAST_U8(c)))<<8)+___CAST_UWORD(___CAST_U8(d)))
 
-#define ___P2U16(b,a)((___UWORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
+#define ___P2U16(b,a)___CAST_WORD((___CAST_UWORD(___CAST_U16(a))<<16)+___CAST_UWORD(___CAST_U16(b)))
 
 #define ___P1U32(a)a
 
@@ -9038,23 +9043,23 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #ifdef ___BIG_ENDIAN
 
-#define ___P8U8(a,b,c,d,e,f,g,h)___CAST(___WORD,(((((((((((((___CAST(___UWORD,___CAST_U8(a))<<8)+___CAST(___UWORD,___CAST_U8(b)))<<8)+___CAST(___UWORD,___CAST_U8(c)))<<8)+___CAST(___UWORD,___CAST_U8(d)))<<8)+___CAST(___UWORD,___CAST_U8(e)))<<8)+___CAST(___UWORD,___CAST_U8(f)))<<8)+___CAST(___UWORD,___CAST_U8(g)))<<8)+___CAST(___UWORD,___CAST_U8(h)))
+#define ___P8U8(a,b,c,d,e,f,g,h)___CAST_WORD((((((((((((((___CAST_UWORD(___CAST_U8(a))<<8)+___CAST_UWORD(___CAST_U8(b)))<<8)+___CAST_UWORD(___CAST_U8(c)))<<8)+___CAST_UWORD(___CAST_U8(d)))<<8)+___CAST_UWORD(___CAST_U8(e)))<<8)+___CAST_UWORD(___CAST_U8(f)))<<8)+___CAST_UWORD(___CAST_U8(g)))<<8)+___CAST_UWORD(___CAST_U8(h)))
 
-#define ___P4U16(a,b,c,d)___CAST(___WORD,(((((___CAST(___UWORD,___CAST_U16(a))<<16)+___CAST(___UWORD,___CAST_U16(b)))<<16)+___CAST(___UWORD,___CAST_U16(c)))<<16)+___CAST(___UWORD,___CAST_U16(d)))
+#define ___P4U16(a,b,c,d)___CAST_WORD((((((___CAST_UWORD(___CAST_U16(a))<<16)+___CAST_UWORD(___CAST_U16(b)))<<16)+___CAST_UWORD(___CAST_U16(c)))<<16)+___CAST_UWORD(___CAST_U16(d)))
 
-#define ___P2U32(a,b)___CAST(___WORD,(___CAST(___UWORD,___CAST_U32(a))<<32)+___CAST(___UWORD,___CAST_U32(b)))
+#define ___P2U32(a,b)___CAST_WORD((___CAST_UWORD(___CAST_U32(a))<<32)+___CAST_UWORD(___CAST_U32(b)))
 
 #else
 
-#define ___P8U8(h,g,f,e,d,c,b,a)___CAST(___WORD,(((((((((((((___CAST(___UWORD,___CAST_U8(a))<<8)+___CAST(___UWORD,___CAST_U8(b)))<<8)+___CAST(___UWORD,___CAST_U8(c)))<<8)+___CAST(___UWORD,___CAST_U8(d)))<<8)+___CAST(___UWORD,___CAST_U8(e)))<<8)+___CAST(___UWORD,___CAST_U8(f)))<<8)+___CAST(___UWORD,___CAST_U8(g)))<<8)+___CAST(___UWORD,___CAST_U8(h)))
+#define ___P8U8(h,g,f,e,d,c,b,a)___CAST_WORD((((((((((((((___CAST_UWORD(___CAST_U8(a))<<8)+___CAST_UWORD(___CAST_U8(b)))<<8)+___CAST_UWORD(___CAST_U8(c)))<<8)+___CAST_UWORD(___CAST_U8(d)))<<8)+___CAST_UWORD(___CAST_U8(e)))<<8)+___CAST_UWORD(___CAST_U8(f)))<<8)+___CAST_UWORD(___CAST_U8(g)))<<8)+___CAST_UWORD(___CAST_U8(h)))
 
-#define ___P4U16(d,c,b,a)___CAST(___WORD,(((((___CAST(___UWORD,___CAST_U16(a))<<16)+___CAST(___UWORD,___CAST_U16(b)))<<16)+___CAST(___UWORD,___CAST_U16(c)))<<16)+___CAST(___UWORD,___CAST_U16(d)))
+#define ___P4U16(d,c,b,a)___CAST_WORD((((((___CAST_UWORD(___CAST_U16(a))<<16)+___CAST_UWORD(___CAST_U16(b)))<<16)+___CAST_UWORD(___CAST_U16(c)))<<16)+___CAST_UWORD(___CAST_U16(d)))
 
-#define ___P2U32(b,a)___CAST(___WORD,(___CAST(___UWORD,___CAST_U32(a))<<32)+___CAST(___UWORD,___CAST_U32(b)))
+#define ___P2U32(b,a)___CAST_WORD((___CAST_UWORD(___CAST_U32(a))<<32)+___CAST_UWORD(___CAST_U32(b)))
 
 #endif
 
-#define ___P1U64(hi,lo)___CAST(___WORD,(___CAST(___UWORD,hi)<<32)+___CAST(___UWORD,___CAST_U32(lo)))
+#define ___P1U64(hi,lo)___CAST_WORD((___CAST_UWORD(hi)<<32)+___CAST_UWORD(___CAST_U32(lo)))
 
 #define ___S8VEC0 ___PADDING};
 #define ___S8VEC1(a),___P8U8(a,0,0,0,0,0,0,0) ___PADDING};
@@ -9164,7 +9169,7 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<2),___sBIGNUM,___PERM)
 ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 
 #define ___BIG0 ___U64VEC0
-#define ___BIG1(a)___BIG2(a,(___WORD)((a) & -0x80000000)?-1:0)___U64VEC0
+#define ___BIG1(a)___BIG2(a,___CAST_WORD((a) & -0x80000000)?-1:0)___U64VEC0
 #define ___BIG2(a,b)___U64VEC1(b,a)
 
 #endif
@@ -9236,7 +9241,7 @@ ___LOCAL ___WORD ___ofdtbl[]={
 #if ___WORD_WIDTH == 32
 #define ___GCMAP2(a,b),a,b
 #else
-#define ___GCMAP2(a,b),___CAST(___WORD,(___CAST(___UWORD,b)<<32)+___CAST(___UWORD,___CAST_U32(a)))
+#define ___GCMAP2(a,b),___CAST_WORD((___CAST_UWORD(b)<<32)+___CAST_UWORD(___CAST_U32(a)))
 #endif
 
 #define ___IFD(kind,fs,link,gcmap)(gcmap<<(2*___IFD_FS_WIDTH+___KIND_WIDTH))+(link<<(___IFD_FS_WIDTH+___KIND_WIDTH))+(fs<<___KIND_WIDTH)+kind
@@ -9256,28 +9261,28 @@ ___ROUND_TO_MULT(fs,___FRAME_ALIGN)+___FRAME_SPACE(___NB_GVM_REGS+1)-___FRAME_RE
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
-fs = ___OFD_FS(*(___WORD*)descr); }
+fs = ___OFD_FS(*___CAST_WORDPTR(descr)); }
 
 #define ___RETI_GET_FS(ra,fs) \
 { ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); \
 else \
-fs = ___RETI_CFS_TO_FS(___OFD_FS(*(___WORD*)descr)); }
+fs = ___RETI_CFS_TO_FS(___OFD_FS(*___CAST_WORDPTR(descr))); }
 
 #define ___RETN_GET_FS(ra,fs) \
 { ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
-fs = ___OFD_FS(*(___WORD*)descr); }
+fs = ___OFD_FS(*___CAST_WORDPTR(descr)); }
 
 #define ___RETI_GET_FS_LINK(ra,fs,link) \
 { ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); } \
 else \
-{ descr = *(___WORD*)descr; \
+{ descr = *___CAST_WORDPTR(descr); \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK(ra,fs,link) \
@@ -9285,7 +9290,7 @@ fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 if (___IS_IFD(descr)) \
 { fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
 else \
-{ descr = *(___WORD*)descr; \
+{ descr = *___CAST_WORDPTR(descr); \
 fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 
 #define ___RETI_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
@@ -9294,7 +9299,7 @@ if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); \
 firstgcmap = ___IFD_GCMAP(descr); } \
 else \
-{ nextgcmap = (___WORD*)descr; descr = *nextgcmap++; firstgcmap = *nextgcmap++; \
+{ nextgcmap = ___CAST_WORDPTR(descr); descr = *nextgcmap++; firstgcmap = *nextgcmap++; \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
@@ -9303,7 +9308,7 @@ if (___IS_IFD(descr)) \
 { firstgcmap = ___IFD_GCMAP(descr); \
 fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
 else \
-{ nextgcmap = (___WORD*)descr; descr = *nextgcmap++; firstgcmap = *nextgcmap++; \
+{ nextgcmap = ___CAST_WORDPTR(descr); descr = *nextgcmap++; firstgcmap = *nextgcmap++; \
 fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 
 /* Procedure descriptor structures. */
@@ -10121,9 +10126,9 @@ void *___x;) \
 #define ___END_SFUN_SCMOBJ_TO_POINTER(s,c,t)
 #define ___BEGIN_SFUN_SCMOBJ_TO_NONNULLPOINTER(s,c,t)___STOC4(___SCMOBJ_to_NONNULLPOINTER,s,&c,t,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_NONNULLPOINTER(s,c,t)
-#define ___BEGIN_SFUN_SCMOBJ_TO_FUNCTION(s,cnv,c)___STOC4(___SCMOBJ_to_FUNCTION,s,___CAST(void*,cnv),&c,___RETURN_POS);
+#define ___BEGIN_SFUN_SCMOBJ_TO_FUNCTION(s,cnv,c)___STOC4(___SCMOBJ_to_FUNCTION,s,___CAST_VOIDPTR(cnv),&c,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_FUNCTION(s,cnv,c)
-#define ___BEGIN_SFUN_SCMOBJ_TO_NONNULLFUNCTION(s,cnv,c)___STOC4(___SCMOBJ_to_NONNULLFUNCTION,s,___CAST(void*,cnv),&c,___RETURN_POS);
+#define ___BEGIN_SFUN_SCMOBJ_TO_NONNULLFUNCTION(s,cnv,c)___STOC4(___SCMOBJ_to_NONNULLFUNCTION,s,___CAST_VOIDPTR(cnv),&c,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_NONNULLFUNCTION(s,cnv,c)
 #define ___BEGIN_SFUN_SCMOBJ_TO_BOOL(s,c)___STOC3(___SCMOBJ_to_BOOL,s,&c,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_BOOL(s,c)
@@ -10238,9 +10243,9 @@ void *___x;) \
 #define ___END_SFUN_POINTER_TO_SCMOBJ(c,t,r,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s,i)___IF_CTOS5(___NONNULLPOINTER_to_SCMOBJ,(void*)c,t,r,&s,i){
 #define ___END_SFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s,i)___EXT(___release_scmobj)(s);}
-#define ___BEGIN_SFUN_FUNCTION_TO_SCMOBJ(c,s,i)___IF_CTOS3(___FUNCTION_to_SCMOBJ,___CAST(void*,c),&s,i){
+#define ___BEGIN_SFUN_FUNCTION_TO_SCMOBJ(c,s,i)___IF_CTOS3(___FUNCTION_to_SCMOBJ,___CAST_VOIDPTR(c),&s,i){
 #define ___END_SFUN_FUNCTION_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
-#define ___BEGIN_SFUN_NONNULLFUNCTION_TO_SCMOBJ(c,s,i)___IF_CTOS3(___NONNULLFUNCTION_to_SCMOBJ,___CAST(void*,c),&s,i){
+#define ___BEGIN_SFUN_NONNULLFUNCTION_TO_SCMOBJ(c,s,i)___IF_CTOS3(___NONNULLFUNCTION_to_SCMOBJ,___CAST_VOIDPTR(c),&s,i){
 #define ___END_SFUN_NONNULLFUNCTION_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_BOOL_TO_SCMOBJ(c,s,i)___IF_CTOS3(___BOOL_to_SCMOBJ,c,&s,i){
 #define ___END_SFUN_BOOL_TO_SCMOBJ(c,s,i)}
@@ -10583,9 +10588,9 @@ ___END_CFUN_CTX \
 #define ___END_CFUN_POINTER_TO_SCMOBJ(c,t,r,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s)___IF_CTOS5(___NONNULLPOINTER_to_SCMOBJ,(void*)c,t,r,&s,___RETURN_POS){
 #define ___END_CFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s)___EXT(___release_scmobj)(s);}
-#define ___BEGIN_CFUN_FUNCTION_TO_SCMOBJ(c,s)___IF_CTOS3(___FUNCTION_to_SCMOBJ,___CAST(void*,c),&s,___RETURN_POS){
+#define ___BEGIN_CFUN_FUNCTION_TO_SCMOBJ(c,s)___IF_CTOS3(___FUNCTION_to_SCMOBJ,___CAST_VOIDPTR(c),&s,___RETURN_POS){
 #define ___END_CFUN_FUNCTION_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
-#define ___BEGIN_CFUN_NONNULLFUNCTION_TO_SCMOBJ(c,s)___IF_CTOS3(___NONNULLFUNCTION_to_SCMOBJ,___CAST(void*,c),&s,___RETURN_POS){
+#define ___BEGIN_CFUN_NONNULLFUNCTION_TO_SCMOBJ(c,s)___IF_CTOS3(___NONNULLFUNCTION_to_SCMOBJ,___CAST_VOIDPTR(c),&s,___RETURN_POS){
 #define ___END_CFUN_NONNULLFUNCTION_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_BOOL_TO_SCMOBJ(c,s)___CTOS3(___BOOL_to_SCMOBJ,c,&s,___RETURN_POS);
 #define ___END_CFUN_BOOL_TO_SCMOBJ(c,s)
@@ -11021,7 +11026,7 @@ __sync_synchronize()
 #ifdef ___USE_WIN32_sync
 
 #define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
-___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,newval),___CAST(void*,oldval)))
+___CAST_WORD(InterlockedCompareExchangePointer(___CAST(void**,p),___CAST_VOIDPTR(newval),___CAST_VOIDPTR(oldval)))
 
 #if ___WS == 4
 #define ___FETCH_AND_ADD_WORD(p,val) \
@@ -11767,10 +11772,10 @@ typedef void (*___host) ___P((___processor_state ___ps),());
 typedef struct ___label_struct
   {
 #ifdef ___SUPPORT_LABEL_VALUES
-    ___FAKEVOIDSTAR host_label;
+    ___FAKEVOIDPTR host_label;
 #define ___LABEL_HOST_LABEL (-3)
 #define ___LABEL_HOST_LABEL_GET(lbl) \
-*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL))
+*___CAST(___FAKEVOIDPTR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL))
 #define ___LABEL_HOST_LABEL_SET(lbl,hlbl) \
 ___LABEL_HOST_LABEL_GET(lbl) = hlbl
 #define ___LABEL_PLACEHOLDER1(x) x,
@@ -11804,7 +11809,7 @@ ___LABEL_HOST_LABEL_GET(lbl) = hlbl
 #define ___LABEL_INFO_SET(lbl, val) ___LABEL_ENTRY_SET(lbl, val)
 
 #if ___LABEL_SIZE - ___LABEL_START_TO_BODY - 1 > 0
-    ___FAKEVOIDSTAR padding[___LABEL_SIZE - ___LABEL_START_TO_BODY - 1];
+    ___FAKEVOIDPTR padding[___LABEL_SIZE - ___LABEL_START_TO_BODY - 1];
 #endif
   } ___label_struct;
 
@@ -11830,11 +11835,11 @@ ___LABEL_HOST_LABEL_GET(lbl) = hlbl
 ___LOCAL ___label_struct ___lbltbl[]={
 
 #define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc) \
-{ ___LABEL_PLACEHOLDER1(___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name)) \
+{ ___LABEL_PLACEHOLDER1(___CAST_VOIDPTR_TO_FAKEVOIDPTR(name)) \
   ___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc)), \
   ___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM), \
   info \
-  ___LABEL_PLACEHOLDER2(___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name)) \
+  ___LABEL_PLACEHOLDER2(___CAST_VOIDPTR_TO_FAKEVOIDPTR(name)) \
   ___LABEL_ZERO_FILL \
 }
 

@@ -1540,7 +1540,7 @@ ___processor_state ___ps;)
 
   static char buf[] = { 0 };
 
-  write (___ps->os.select_abort.writing_fd, buf, 1); /* ignore error */
+  int dummy = write (___ps->os.select_abort.writing_fd, buf, 1); /* ignore error */
 
 #endif
 
@@ -4549,7 +4549,7 @@ ___SCMOBJ client_ca_path;)
 
   if ((scm_e =___NONNULLPOINTER_to_SCMOBJ
                (___PSTATE,
-                ___CAST(void*,c),
+                ___CAST_VOIDPTR(c),
                 ___FAL,
                 ___release_rc_tls_context,
                 &scm_ctx,

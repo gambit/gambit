@@ -812,18 +812,18 @@ echo BUILD_TARGETS="$BUILD_TARGETS"
 #
 # Check the size of the type "void*".  On many systems it is the same
 # size as "long".  If this isn't the case then define
-# ___VOIDSTAR_WIDTH appropriately.
+# ___VOIDPTR_WIDTH appropriately.
 
 AC_CHECK_SIZEOF(void*)
 AC_CHECK_SIZEOF(long)
 
 if test "$ac_cv_sizeof_voidp" != "$ac_cv_sizeof_long"; then
-  CONF_VOIDSTAR_WIDTH="($ac_cv_sizeof_voidp * ___CHAR_WIDTH)"
+  CONF_VOIDPTR_WIDTH="($ac_cv_sizeof_voidp * ___CHAR_WIDTH)"
 else
-  CONF_VOIDSTAR_WIDTH="___LONG_WIDTH"
+  CONF_VOIDPTR_WIDTH="___LONG_WIDTH"
 fi
 
-AC_SUBST(CONF_VOIDSTAR_WIDTH)
+AC_SUBST(CONF_VOIDPTR_WIDTH)
 
 ###############################################################################
 #
@@ -3355,7 +3355,7 @@ case "$target_os" in
 #define ___MH_PROC ___H__20_GAMBITCHECKMODULEPREFIXSUFFIX
 #define ___SCRIPT_LINE 0
 #define ___MAX_CHR 0x10ffff
-#define ___VOIDSTAR_WIDTH ___LONG_WIDTH
+#define ___VOIDPTR_WIDTH ___LONG_WIDTH
 #include "gambit.h.in"
 
 ___BEGIN_MOD1

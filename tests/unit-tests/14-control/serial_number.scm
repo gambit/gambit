@@ -7,7 +7,7 @@
 (define x (list 1 2))
 (test-eq x (serial-number->object (object->serial-number x)))
 
-(test-eq 'missing (serial-number->object 999999999 'missing))
+(test-eq 'missing (serial-number->object 99999999 'missing))
 
 (test-error-tail wrong-number-of-arguments-exception? (object->serial-number))
 (test-error-tail wrong-number-of-arguments-exception? (object->serial-number 1 2))

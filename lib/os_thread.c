@@ -1,6 +1,6 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013-2023 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2026 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.
@@ -502,7 +502,7 @@ ___thread *thread;)
   if (pthread_create (&thread_id,
                       NULL,
                       start_pthread_thread,
-                      ___CAST(void*,thread)) != 0)
+                      ___CAST_VOIDPTR(thread)) != 0)
     return err_code_from_errno ();
 
   thread->thread_id = thread_id;

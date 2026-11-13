@@ -83,7 +83,9 @@ int code;)
     return;
 #endif
 
-  if (___INTERRUPT_REQ(___ps->intr_flag[code] = ___FIX(1)<<code))
+  ___ps->intr_flag[code] = ___FIX(1)<<code;
+
+  if (___INTERRUPT_REQ(___FIX(1)<<code))
     {
       ___STACK_TRIP_ON();
       ___SHARED_MEMORY_BARRIER(); /* make sure write happens promptly */
@@ -190,7 +192,7 @@ ___processor_state ___ps;)
 
       ___MUTEX_UNLOCK(___ps->procedural_interrupts_mut);
 
-      if ((err = probe->execute_fn (___CAST(void*, probe), ___TRU))
+      if ((err = probe->execute_fn (___CAST_VOIDPTR(probe), ___TRU))
           != ___FIX(___NO_ERR))
         break;
 
@@ -407,7 +409,7 @@ ___processor_state ___ps;)
   while (probe != NULL)
     {
       ___procedural_interrupt_header *next = probe->next;
-      release_procedural_interrupt (___CAST(void*,probe));
+      release_procedural_interrupt (___CAST_VOIDPTR(probe));
       probe = next;
     }
 
@@ -990,7 +992,7 @@ ___WORD target_processor_count;)
               ___thread *t = &ps->os_thread;
 
               t->start_fn = start_processor_execution;
-              t->data_ptr = ___CAST(void*,ps);
+              t->data_ptr = ___CAST_VOIDPTR(ps);
               t->data_scmobj = thunk;
 
               if ((err = ___thread_create (t)) != ___FIX(___NO_ERR))
@@ -1450,7 +1452,7 @@ int n;)
                     ___F64 uv = ___MEM_ALLOCATED_FLONUM_GET(v);
                     ___U64 ___u64_uv = ___F64_TO_U64_FOR_SELF_TAGGING(uv);
                     if (___EXPECT_TRUE(___SELF_TAGGED_FLONUM(___u64_uv)))
-                      v = ___CAST(___WORD,___u64_uv);
+                      v = ___CAST_WORD(___u64_uv);
                   }
               }
 #endif
@@ -1805,7 +1807,7 @@ ___module_struct *module;)
                     }
 
                   ___LABEL_HOST_LABEL_SET(lbl,
-                                          ___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(*hlbl_ptr++));
+                                          ___CAST_VOIDPTR_TO_FAKEVOIDPTR(*hlbl_ptr++));
                 }
 #endif
 
@@ -1941,7 +1943,7 @@ ___module_struct *module;)
 
       if ((err = ___NONNULLPOINTER_to_SCMOBJ
                    (NULL, /* allocate as permanent object */
-                    ___CAST(void*,module),
+                    ___CAST_VOIDPTR(module),
                     ___FAL,
                     NULL,
                     &module_scmobj,
@@ -4079,7 +4081,7 @@ ___SCMOBJ fixup_objs;)
 {
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
-  ___WORD code = ___CAST(___WORD,mcb);
+  ___WORD code = ___CAST_WORD(mcb);
   ___U8 *ptr = ___CAST(___U8*,___BODY_AS(fixup_locs,___tSUBTYPED));
   ___WORD pos = 0;
   ___U8 loc;
@@ -4103,7 +4105,7 @@ ___SCMOBJ fixup_objs;)
               break;
 
             case 1:
-              x = *___CAST(___WORD*,code+fixup_pos);
+              x = *___CAST_WORDPTR(code+fixup_pos);
               break;
             }
 
@@ -4127,20 +4129,20 @@ ___SCMOBJ fixup_objs;)
             case 3:
               val = ___VECTORREF(fixup_objs, ___FIX(arg));
               val = ___make_global_var (val);
-              val = ___CAST(___WORD, &___GLOBALVARREF(val));
+              val = ___CAST_WORD(&___GLOBALVARREF(val));
               break;
 
             case 4:
               val = ___VECTORREF(fixup_objs, ___FIX(arg));
               val = ___make_global_var (val);
-              val = ___CAST(___WORD, &___GLOBALVARPRIMREF(val));
+              val = ___CAST_WORD(&___GLOBALVARPRIMREF(val));
               break;
 
             case 5:
               switch (arg)
                 {
                 case 0:
-                  val = ___CAST(___WORD, ___lowlevel_exec);
+                  val = ___CAST_WORD(___lowlevel_exec);
                   break;
                 }
               break;
@@ -4206,7 +4208,7 @@ ___SCMOBJ fixup_objs;)
               switch (op >> 4)
                 {
                 case 0:
-                  *___CAST(___WORD*,code+fixup_pos) = val;
+                  *___CAST_WORDPTR(code+fixup_pos) = val;
                   pos = fixup_pos + sizeof(___WORD);
                   break;
 

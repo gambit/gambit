@@ -1,6 +1,6 @@
 /* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -95,7 +95,7 @@ void **linker;)
   p->descr = LoadLibrary (cpath);
 
   if (p->descr != 0 &&
-      (*linker = ___CAST(void*,GetProcAddress (p->descr, clinkername))) != 0)
+      (*linker = ___CAST_VOIDPTR(GetProcAddress (p->descr, clinkername))) != 0)
     result = ___FIX(___NO_ERR);
   else
     {
@@ -245,7 +245,7 @@ void **linker;)
                 CloseConnection (&p->descr);
               }
             else
-              *linker = ___CAST(void*,procadr);
+              *linker = ___CAST_VOIDPTR(procadr);
           }
       }
   }

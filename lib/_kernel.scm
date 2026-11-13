@@ -42,7 +42,7 @@
 
 #define ___ALLOC_SCMOBJ_INLINE(type, elem_type, nb_elems, align64) \
 do { \
-  if ((nb_elems) > ___CAST(___WORD, (___LMASK>>___LF) / sizeof (elem_type))) \
+  if ((nb_elems) > ___CAST_WORD((___LMASK>>___LF) / sizeof (elem_type))) \
     result = ___FIX(___HEAP_OVERFLOW_ERR); \
   else \
     { \
@@ -77,7 +77,7 @@ do { \
               if (___WS == 4 && (align64)) \
                 { \
                   ___hp = ___CAST(___WORD*, \
-                                  ___CAST(___WORD,___hp+(___SUBTYPED_BODY+1))&~7) \
+                                  ___CAST_WORD(___hp+(___SUBTYPED_BODY+1))&~7) \
                           - ___SUBTYPED_BODY; \
                   words--; \
                 } \
@@ -3870,7 +3870,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___RESULT = ___BOOLEAN(___CAST(void*,___FOREIGN_PTR_FIELD(___ARG1)) == 0);
+   ___RESULT = ___BOOLEAN(___CAST_VOIDPTR(___FOREIGN_PTR_FIELD(___ARG1)) == 0);
 
 end-of-code
 
@@ -3898,7 +3898,7 @@ end-of-code
              size_t
     "
     ___return(___CAST(___SIZE_T,
-                      ___CAST(void*,___FOREIGN_PTR_FIELD(___arg1))));
+                      ___CAST_VOIDPTR(___FOREIGN_PTR_FIELD(___arg1))));
     ")
    f))
 

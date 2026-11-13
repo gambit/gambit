@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -6832,7 +6832,7 @@ extensible_string *completion;)
   dat.next = ___FAL;
   dat.common_length = 0;
 
-  ___for_each_symkey (___sSYMBOL, visit_symbol, ___CAST(void*,&dat));
+  ___for_each_symkey (___sSYMBOL, visit_symbol, ___CAST_VOIDPTR(&dat));
 
   if (dat.next != ___FAL)
     {

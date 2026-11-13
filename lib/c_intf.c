@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -1698,11 +1698,11 @@ ___SCMOBJ obj;)
 
   if (release_fn != 0)
     {
-      ptr = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
+      ptr = ___CAST_VOIDPTR(___FOREIGN_PTR_FIELD(obj));
       ___FOREIGN_RELEASE_FN_FIELD(obj) =
         ___CAST(___SCMOBJ,___CAST(___SCMOBJ (*) ___P((void *ptr),()),0));
       ___FOREIGN_PTR_FIELD(obj) =
-        ___CAST(___SCMOBJ,___CAST(void*,0));
+        ___CAST(___SCMOBJ,___CAST_VOIDPTR(0));
       if ((e = release_fn (ptr)) != ___FIX(___NO_ERR))
         return e;
     }
@@ -2851,7 +2851,7 @@ int arg_num;)
       !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_POINTER_ERR+arg_num);
 
-  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
+  *x = ___CAST_VOIDPTR(___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -2919,7 +2919,7 @@ int arg_num;)
 
       if (body[___LABEL_ENTRY_OR_DESCR] != obj /* closure? */
           || !___TESTHEADERTAG(body[-___LABEL_SIZE-1],___sVECTOR)/* not INTRO label? */
-          || (*x = ___CAST(void*,body[-___LABEL_SIZE+___LABEL_HOST]))
+          || (*x = ___CAST_VOIDPTR(body[-___LABEL_SIZE+___LABEL_HOST]))
              == 0) /* not "c-define"d? */
         {
           /*
@@ -3011,7 +3011,7 @@ int arg_num;)
       !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_STRUCT_ERR+arg_num);
 
-  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
+  *x = ___CAST_VOIDPTR(___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -3041,7 +3041,7 @@ int arg_num;)
       !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_UNION_ERR+arg_num);
 
-  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
+  *x = ___CAST_VOIDPTR(___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -3071,7 +3071,7 @@ int arg_num;)
       !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_TYPE_ERR+arg_num);
 
-  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
+  *x = ___CAST_VOIDPTR(___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -3249,7 +3249,7 @@ int fudge;)
 
         r[n] = 0;
 
-        *x = ___CAST(void*,r);
+        *x = ___CAST_VOIDPTR(r);
 
         break;
       }
@@ -3286,7 +3286,7 @@ int fudge;)
 
         *p = 0;
 
-        *x = ___CAST(void*,r);
+        *x = ___CAST_VOIDPTR(r);
 
         break;
       }
@@ -3335,7 +3335,7 @@ int fudge;)
 
         *p = 0;
 
-        *x = ___CAST(void*,r);
+        *x = ___CAST_VOIDPTR(r);
 
         break;
       }
@@ -3366,7 +3366,7 @@ int fudge;)
 
         r[n] = 0;
 
-        *x = ___CAST(void*,r);
+        *x = ___CAST_VOIDPTR(r);
 
         break;
       }
@@ -3397,7 +3397,7 @@ int fudge;)
 
         r[n] = 0;
 
-        *x = ___CAST(void*,r);
+        *x = ___CAST_VOIDPTR(r);
 
         break;
       }
@@ -3441,7 +3441,7 @@ int fudge;)
 
         r[n] = 0;
 
-        *x = ___CAST(void*,r);
+        *x = ___CAST_VOIDPTR(r);
 
         break;
       }
@@ -3472,7 +3472,7 @@ int fudge;)
 
         r[n] = 0;
 
-        *x = ___CAST(void*,r);
+        *x = ___CAST_VOIDPTR(r);
 
         break;
       }
@@ -4654,7 +4654,7 @@ int arg_num;)
   u64_x = ___ROTR64(u64_x, ___SELF_TAGGED_FLONUM_SHIFT2);
 
   if (___SELF_TAGGED_FLONUM(u64_x)) {
-    r = ___CAST(___WORD,u64_x);
+    r = ___CAST_WORD(u64_x);
   } else
 
 #endif
@@ -5873,7 +5873,7 @@ int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (___ps,
-            ___CAST(void*,x),
+            ___CAST_VOIDPTR(x),
             obj,
             arg_num,
             ___CHAR_ENCODING_NATIVE);
@@ -5948,7 +5948,7 @@ int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (___ps,
-            ___CAST(void*,x),
+            ___CAST_VOIDPTR(x),
             obj,
             arg_num,
             ___CHAR_ENCODING_ISO_8859_1);
@@ -6023,7 +6023,7 @@ int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (___ps,
-            ___CAST(void*,x),
+            ___CAST_VOIDPTR(x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_8);
@@ -6098,7 +6098,7 @@ int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (___ps,
-            ___CAST(void*,x),
+            ___CAST_VOIDPTR(x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_16);
@@ -6172,7 +6172,7 @@ int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (___ps,
-            ___CAST(void*,x),
+            ___CAST_VOIDPTR(x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_2);
@@ -6247,7 +6247,7 @@ int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (___ps,
-            ___CAST(void*,x),
+            ___CAST_VOIDPTR(x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_4);
@@ -6322,7 +6322,7 @@ int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (___ps,
-            ___CAST(void*,x),
+            ___CAST_VOIDPTR(x),
             obj,
             arg_num,
             ___CHAR_ENCODING_WCHAR);

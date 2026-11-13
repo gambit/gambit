@@ -588,13 +588,12 @@ ___BOOL heap;)
     return 0;
   else
     {
-      void *ptr = ___CAST(void*,
-                          (((___CAST(___WORD,container) + extra) &
-                            -___CAST(___WORD,multiplier * ___WS)) +
-                           modulus * ___WS));
+      void *ptr = ___CAST_VOIDPTR(((___CAST_WORD(container) + extra) &
+                                   -___CAST_WORD(multiplier * ___WS)) +
+                                  modulus * ___WS);
       void **cptr = ___CAST(void**,
-                            (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
-                            -___CAST(___WORD,sizeof (void*)));
+                            (___CAST_WORD(ptr) - ___CAST_WORD(sizeof (void*))) &
+                            -___CAST_WORD(sizeof (void*)));
 
       *cptr = container;
       return ptr;
@@ -643,8 +642,8 @@ ___HIDDEN void free_mem_aligned
 void *ptr;)
 {
   void **cptr = ___CAST(void**,
-                        (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
-                        -___CAST(___WORD,sizeof (void*)));
+                        (___CAST_WORD(ptr) - ___CAST_WORD(sizeof (void*))) &
+                        -___CAST_WORD(sizeof (void*)));
   ___FREE_MEM(*cptr);
 }
 
@@ -660,8 +659,8 @@ ___HIDDEN void free_mem_aligned_heap
 void *ptr;)
 {
   void **cptr = ___CAST(void**,
-                        (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
-                        -___CAST(___WORD,sizeof (void*)));
+                        (___CAST_WORD(ptr) - ___CAST_WORD(sizeof (void*))) &
+                        -___CAST_WORD(sizeof (void*)));
   ___FREE_MEM_HEAP(*cptr);
 }
 
@@ -713,7 +712,7 @@ ___SIZE_T bytes;)
       h->refcount = 1;
       h->data = ___FAL;
 
-      return ___CAST(void*,h+1);
+      return ___CAST_VOIDPTR(h+1);
     }
 
   return 0;
@@ -858,11 +857,11 @@ void *ptr;)
 
 #ifdef ___ALLOC_MEM_UP
   if (ns == 0 ||
-      ptr < ___CAST(void*,sections[0]))
+      ptr < ___CAST_VOIDPTR(sections[0]))
     return -1;
 #else
   if (ns == 0 ||
-      ptr < ___CAST(void*,sections[ns-1]))
+      ptr < ___CAST_VOIDPTR(sections[ns-1]))
     return ns;
 #endif
 
@@ -877,9 +876,9 @@ void *ptr;)
     {
       int mid = (lo+hi) / 2; /* lo <= mid < hi */
 #ifdef ___ALLOC_MEM_UP
-      if (ptr < ___CAST(void*,sections[mid+1])) hi = mid; else lo = mid+1;
+      if (ptr < ___CAST_VOIDPTR(sections[mid+1])) hi = mid; else lo = mid+1;
 #else
-      if (ptr < ___CAST(void*,sections[mid])) lo = mid+1; else hi = mid;
+      if (ptr < ___CAST_VOIDPTR(sections[mid])) lo = mid+1; else hi = mid;
 #endif
     }
 
@@ -1018,7 +1017,7 @@ int n;)
           if (s == 0)
             return;
 
-          i = find_msection (ms, ___CAST(void*,s));
+          i = find_msection (ms, ___CAST_VOIDPTR(s));
 
 #ifdef ___ALLOC_MEM_UP
           i++;
@@ -1130,7 +1129,7 @@ unsigned int modulus;)
 
   *___CAST(void**,container) = ___GSTATE->mem.psections;
   ___GSTATE->mem.psections = container;
-  return ___CAST(void*,___CAST(___WORD*,container) + modulus);
+  return ___CAST_VOIDPTR(___CAST_WORDPTR(container) + modulus);
 }
 
 
@@ -1168,9 +1167,9 @@ int modulus;)
     {
       ___WORD *new_palloc_ptr;
 
-      base = ___CAST(___WORD*,
-                     ___CAST(___WORD,___GSTATE->mem.palloc_ptr+multiplier-1-modulus) &
-                     (multiplier * -___WS)) +
+      base = ___CAST_WORDPTR(
+               ___CAST_WORD(___GSTATE->mem.palloc_ptr+multiplier-1-modulus) &
+               (multiplier * -___WS)) +
              modulus;
 
       new_palloc_ptr = base + words;
@@ -1194,11 +1193,10 @@ int modulus;)
   if (waste > ___PSECTION_WASTE || words > ___PSECTION_SIZE)
     return alloc_mem_aligned_psection (words, multiplier, modulus);
 
-  base = ___CAST(___WORD*,
-                 alloc_mem_aligned_psection
-                   (___PSECTION_SIZE,
-                    multiplier,
-                    modulus));
+  base = ___CAST_WORDPTR(
+           alloc_mem_aligned_psection (___PSECTION_SIZE,
+                                       multiplier,
+                                       modulus));
 
   if (base != 0)
     {
@@ -1526,11 +1524,11 @@ ___SIZE_TS bytes;)
   if (ptr == 0)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
-  base = ___CAST(___WORD*,ptr);
+  base = ___CAST_WORDPTR(ptr);
   body = base + ___PERM_BODY;
 
 #ifdef ___USE_HANDLES
-  base[___PERM_HANDLE] = ___CAST(___WORD,body);
+  base[___PERM_HANDLE] = ___CAST_WORD(body);
 #endif
 
   base[___PERM_HEADER] = ___MAKE_HD(bytes, subtype, ___PERM);
@@ -1675,16 +1673,16 @@ ___SIZE_TS bytes;)
 
   /* Initialize still object and add it to the still_objs list. */
 
-  base = ___CAST(___WORD*,ptr);
+  base = ___CAST_WORDPTR(ptr);
   body = base + ___STILL_BODY;
 
   base[___STILL_LINK] = still_objs;
-  still_objs = ___CAST(___WORD,base);
+  still_objs = ___CAST_WORD(base);
   base[___STILL_REFCOUNT] = 1;
   base[___STILL_LENGTH] = words;
 
 #ifdef ___USE_HANDLES
-  base[___STILL_HANDLE] = ___CAST(___WORD,body);
+  base[___STILL_HANDLE] = ___CAST_WORD(body);
 #endif
 
   base[___STILL_HEADER] = ___MAKE_HD(bytes, subtype, ___STILL);
@@ -1797,7 +1795,7 @@ ___processor_state ___ps;
 ___SIZE_TS length;
 ___WORD init;)
 {
-  if (length > ___CAST(___WORD,___LMASK >> (___LF+___LWS)))
+  if (length > ___CAST_WORD(___LMASK >> (___LF+___LWS)))
     return ___FIX(___HEAP_OVERFLOW_ERR);
   else
     {
@@ -2207,7 +2205,7 @@ void *data;)
 
 
 #define ZAP_USING_INVALID_HEAD_TAG_not
-#define ZAP_PATTERN ___CAST(___WORD,0xcafebabe)
+#define ZAP_PATTERN ___CAST_WORD(0xcafebabe)
 #define INVALID_HEAD_TAG 4
 
 
@@ -3561,7 +3559,7 @@ ___WORD n;)
                  */
                 if (subtype >= ___sS64VECTOR)
                   {
-                    if ((___CAST(___WORD,alloc) & (8-1)) == 0)
+                    if ((___CAST_WORD(alloc) & (8-1)) == 0)
                       *alloc++ = ___MAKE_HD_WORDS(0, ___sVECTOR);
                     else
                       pad = 1;
@@ -3630,20 +3628,20 @@ ___WORD n;)
                 if (body[___STILL_MARK - ___STILL_BODY] == -1)
                   {
                     body[___STILL_MARK - ___STILL_BODY]
-                      = ___CAST(___WORD,still_objs_to_scan);
+                      = ___CAST_WORD(still_objs_to_scan);
                     still_objs_to_scan
-                      = ___CAST(___WORD,body - ___STILL_BODY);
+                      = ___CAST_WORD(body - ___STILL_BODY);
                   }
 
 #else
 
                 if (___COMPARE_AND_SWAP_WORD(&body[___STILL_MARK - ___STILL_BODY],
                                              -1,
-                                             ___CAST(___WORD,still_objs_to_scan))
+                                             ___CAST_WORD(still_objs_to_scan))
                     == -1)
                   {
                     still_objs_to_scan
-                      = ___CAST(___WORD,body - ___STILL_BODY);
+                      = ___CAST_WORD(body - ___STILL_BODY);
                   }
 #endif
               }
@@ -3683,7 +3681,7 @@ ___WORD *orig_ptr;)
   cf = *ptr;
 
 #ifdef SHOW_FRAMES
-  ___printf ("mark_captured_continuation cf=%p\n", ___CAST(void*,cf));
+  ___printf ("mark_captured_continuation cf=%p\n", ___CAST_VOIDPTR(cf));
 #endif
 
   if (___FIXNUMP(cf) && cf != ___END_OF_CONT_MARKER)
@@ -3697,7 +3695,7 @@ ___WORD *orig_ptr;)
 
       next_frame:
 
-      fp = ___CAST(___WORD*,cf);
+      fp = ___CAST_WORDPTR(cf);
 
       ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
@@ -3781,7 +3779,7 @@ ___WORD *orig_ptr;)
               ___COVER_MARK_CAPTURED_CONTINUATION_NOT_FIRST_FRAME;
 
               ___FP_SET_STK(fp,-___FRAME_STACK_RA,ra2)
-              cf = ___CAST(___WORD,fp);
+              cf = ___CAST_WORD(fp);
             }
 
           ___FP_SET_STK(alloc,link+1,cf)
@@ -4084,7 +4082,7 @@ ___WORD head;)
             }
 
           body[0] = reached_gc_hash_tables;
-          reached_gc_hash_tables = ___CAST(___WORD,body);
+          reached_gc_hash_tables = ___CAST_WORD(body);
         }
       break;
 
@@ -4213,7 +4211,7 @@ ___HIDDEN void setup_still_objs_to_scan
 ___PSDKR)
 {
   ___PSGET
-  ___WORD *base = ___CAST(___WORD*,still_objs);
+  ___WORD *base = ___CAST_WORDPTR(still_objs);
   ___WORD *to_scan = 0;
 
   while (base != 0)
@@ -4222,13 +4220,13 @@ ___PSDKR)
         base[___STILL_MARK] = -1;
       else
         {
-          base[___STILL_MARK] = ___CAST(___WORD,to_scan);
+          base[___STILL_MARK] = ___CAST_WORD(to_scan);
           to_scan = base;
         }
-      base = ___CAST(___WORD*,base[___STILL_LINK]);
+      base = ___CAST_WORDPTR(base[___STILL_LINK]);
     }
 
-  still_objs_to_scan = ___CAST(___WORD,to_scan);
+  still_objs_to_scan = ___CAST_WORD(to_scan);
 }
 
 
@@ -4240,7 +4238,7 @@ ___PSDKR)
   ___PSGET
   ___WORD *base;
 
-  while ((base = ___CAST(___WORD*,still_objs_to_scan)) != 0)
+  while ((base = ___CAST_WORDPTR(still_objs_to_scan)) != 0)
     {
       ___WORD *body = base + ___STILL_BODY;
       still_objs_to_scan = base[___STILL_MARK];
@@ -4391,7 +4389,7 @@ ___PSDKR)
 {
   ___PSGET
   ___WORD *last = &still_objs;
-  ___WORD *base = ___CAST(___WORD*,*last);
+  ___WORD *base = ___CAST_WORDPTR(*last);
   ___SIZE_TS live_words_still = 0;
 
   while (base != 0)
@@ -4408,10 +4406,10 @@ ___PSDKR)
       else
         {
           live_words_still += base[___STILL_LENGTH];
-          *last = ___CAST(___WORD,base);
+          *last = ___CAST_WORD(base);
           last = base + ___STILL_LINK;
         }
-      base = ___CAST(___WORD*,link);
+      base = ___CAST_WORDPTR(link);
     }
 
   *last = 0;
@@ -4434,7 +4432,7 @@ ___HIDDEN void free_still_objs
         (___ps)
 ___processor_state ___ps;)
 {
-  ___WORD *base = ___CAST(___WORD*,still_objs);
+  ___WORD *base = ___CAST_WORDPTR(still_objs);
 
   still_objs = 0;
 
@@ -4446,7 +4444,7 @@ ___processor_state ___ps;)
         ___release_foreign
           (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
       free_mem_aligned_heap (base);
-      base = ___CAST(___WORD*,link);
+      base = ___CAST_WORDPTR(link);
     }
 }
 
@@ -5368,7 +5366,7 @@ ___PSDKR)
 
   while (curr != ___TAG(0,0))
     {
-      ___WORD* body = ___CAST(___WORD*,curr);
+      ___WORD* body = ___CAST_WORDPTR(curr);
       ___SIZE_TS words = ___HD_WORDS(body[-1]);
       int flags = ___INT(body[___GCHASHTABLE_FLAGS]);
       int i;
@@ -6681,7 +6679,7 @@ ___PSDKR)
     {
       scan_still_objs_to_scan (___PSPNC);
       scan_movable_objs_to_scan (___PSPNC);
-    } while (___CAST(___WORD*,still_objs_to_scan) != 0);
+    } while (___CAST_WORDPTR(still_objs_to_scan) != 0);
 
 #ifndef ___SINGLE_THREADED_VMS
 
@@ -7202,7 +7200,7 @@ ___PSDKR)
                   ___FP_ADJFP(alloc_stack_ptr,___BREAK_FRAME_SPACE)
                   ___FP_SET_STK(alloc_stack_ptr,
                                 -___BREAK_FRAME_NEXT,
-                                ___CAST(___WORD,prev_alloc_stack_ptr))
+                                ___CAST_WORD(prev_alloc_stack_ptr))
                   ___ps->stack_break = alloc_stack_ptr;
                 }
 
@@ -7295,7 +7293,7 @@ ___PSDKR)
 
               ___FP_SET_STK(alloc_stack_ptr,
                             -___BREAK_FRAME_NEXT,
-                            ___CAST(___WORD,prev_alloc_stack_ptr))
+                            ___CAST_WORD(prev_alloc_stack_ptr))
               ___FORBID_STACK_OVERFLOW_UNDO(alloc_stack_ptr)
               ___ps->stack_break = alloc_stack_ptr;
 
@@ -7321,15 +7319,15 @@ ___PSDKR)
 
               ___FP_SET_STK(alloc_stack_ptr,
                             -___FIRST_BREAK_FRAME_STACK_MSECTION,
-                            ___CAST(___WORD,prev_stack_msection))
+                            ___CAST_WORD(prev_stack_msection))
 
               ___FP_SET_STK(alloc_stack_ptr,
                             -___FIRST_BREAK_FRAME_STACK_BREAK,
-                            ___CAST(___WORD,prev_stack_break))
+                            ___CAST_WORD(prev_stack_break))
 
               ___FP_SET_STK(alloc_stack_ptr,
                             -___BREAK_FRAME_NEXT,
-                            ___CAST(___WORD,fp))
+                            ___CAST_WORD(fp))
 
               ___ps->stack_break = alloc_stack_ptr;
 
@@ -7379,16 +7377,16 @@ ___PSDKR)
        * be moved to the previous stack msection.
        */
 
-      stack_msection->base[0] = ___CAST(___WORD,msection_free_list);
+      stack_msection->base[0] = ___CAST_WORD(msection_free_list);
       msection_free_list = stack_msection;
 
       set_stack_msection (___ps, ms);
 
       ___ps->stack_break =
-        ___CAST(___WORD*,___STK(-___FIRST_BREAK_FRAME_STACK_BREAK));
+        ___CAST_WORDPTR(___STK(-___FIRST_BREAK_FRAME_STACK_BREAK));
 
       alloc_stack_ptr =
-        ___CAST(___WORD*,___STK(-___BREAK_FRAME_NEXT));
+        ___CAST_WORDPTR(___STK(-___BREAK_FRAME_NEXT));
 
       ___ps->stack_start = alloc_stack_start;
 
