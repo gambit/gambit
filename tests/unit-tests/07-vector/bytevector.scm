@@ -45,12 +45,12 @@
 (test-error-tail type-exception? (bytevector-copy! bool 0 #u8(1)))
 (test-error-tail type-exception? (make-bytevector bool))
 
-(test-error-tail range-exception? (bytevector-u8-ref #u8(1 2) -1))
-(test-error-tail range-exception? (bytevector-u8-ref #u8(1 2) 2))
-(test-error-tail range-exception? (bytevector-u8-set! #u8(1 2) 2 0))
+(test-error-tail range-exception? (bytevector-u8-ref b -1))
+(test-error-tail range-exception? (bytevector-u8-ref b 3))
+(test-error-tail range-exception? (bytevector-u8-set! b 3 0))
 (test-error-tail range-exception? (make-bytevector -1))
 
 (test-error-tail wrong-number-of-arguments-exception? (bytevector?))
 (test-error-tail wrong-number-of-arguments-exception? (bytevector-length))
-(test-error-tail wrong-number-of-arguments-exception? (bytevector-u8-ref #u8(1)))
-(test-error-tail wrong-number-of-arguments-exception? (bytevector-u8-set! #u8(1) 0))
+(test-error-tail wrong-number-of-arguments-exception? (bytevector-u8-ref b))
+(test-error-tail wrong-number-of-arguments-exception? (bytevector-u8-set! b 0))
