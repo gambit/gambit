@@ -5592,9 +5592,14 @@
                   (and type-check?
                        (gen-index-check source env arg1 arg2)))
                  (value-check
-                  (and value-checker
-                       (not (eq? kind 'ref))
-                       (value-checker source env (caddr vars))))
+                  (if (eq? kind 'inc!)
+                      (and (pair? (cddr vars))
+                           (gen-call-prim-vars-notsafe source env
+                              **fixnum?-sym
+                              (list (caddr vars))))
+                      (and value-checker
+                           (not (eq? kind 'ref))
+                           (value-checker source env (caddr vars)))))
                  (index-value-check
                   (if (and index-check value-check)
                       (new-conj source env
