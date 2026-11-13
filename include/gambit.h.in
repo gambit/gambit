@@ -4507,7 +4507,7 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
         ? (var=___FIXWRAPMUL(x,y),1) \
         : 0) \
    : (y)==___FIX(-1) \
-     ? (var=___FIXNEGP(x),1) \
+     ? ___FIXNEGP_NOTFALSEP(var,x) \
      : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MAX_FIX/___INT(y)),___FIX(___MIN_FIX/___INT(y)))) \
        ? (var=___FIXWRAPMUL(x,y),1) \
        : 0)

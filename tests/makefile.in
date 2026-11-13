@@ -189,8 +189,12 @@ ut-coverage:
 ut-untested:
 	@$(MAKE) ut-coverage | sed -n '/;;START-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/,/;;END-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/ { /;;START-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/d; /;;END-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/d; p; }'
 
-ut ut-C:
+ut:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
+
+ut-C:
+	(cd ../lib; make _gambit.js)
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -C -gsc
 
 ut-js:
 	(cd ../lib; make _gambit.js)
