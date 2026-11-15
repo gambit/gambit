@@ -199,14 +199,14 @@
                                  past)))
                    ((child)
                       (gen-perms
-                         (fold past cons (cdr zulu-future))))
+                         (myfold past cons (cdr zulu-future))))
                    ((puke)
                       (cons (car zulu-future)
-                            (fold past cons (cdr zulu-future))))
+                            (myfold past cons (cdr zulu-future))))
                    (else
                       (error gen-perms "Bad msg: ~a" msg))))))))
 
-(define fold
+(define myfold
    (lambda (lst folder state)
       (let _-*-
            ((lst
@@ -378,7 +378,7 @@
                                           (lambda (x)
                                              (cons coef-zero x))
                                           (_-*-
-                                             (fold in
+                                             (myfold in
                                                    (lambda (row mat)
                                                       (cons
                                                          (let ((first-col
@@ -564,7 +564,7 @@
                                  (or ((car tests) row)
                                      (_-*- (cdr tests)))))))))
              (all-rows  ; all rows starting with +1 in decreasing order
-                (fold
+                (myfold
                    (fold-over-rows (- number-of-cols 1)
                                    cons
                                    '())
@@ -682,7 +682,7 @@
 (define remove-in-order
    (lambda (remove? lst)
       (reverse
-         (fold lst
+         (myfold lst
                (lambda (e lst)
                   (if (remove? e)
                       lst
