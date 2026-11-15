@@ -4,7 +4,7 @@
 
 
 ; Fold over list elements, associating to the left.
-(define fold
+(define myfold
     (lambda (lst folder state)
 ;        (assert (list? lst)
 ;            lst)
@@ -39,7 +39,7 @@
                 (loop (+ i 1)))))
           x))))
 
-(define vector-fold
+(define myvector-fold
     (lambda (vec folder state)
 ;        (assert (vector? vec)
 ;            vec)
@@ -228,7 +228,7 @@
                             b-state
                             t-state
                             (lambda (new-b-state new-t-state)
-                                (_-*- (fold out cons rest)
+                                (_-*- (myfold out cons rest)
                                     new-b-state
                                     new-t-state
                                     accross))
