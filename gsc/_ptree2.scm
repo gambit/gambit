@@ -834,8 +834,7 @@
                                            (ptset->list (var-sets var)))))))
                  (varset->list defined-vars)))
            (order
-            (topological-sort
-             (transitive-closure depgraph))))
+            (cycle-tolerant-topological-sort depgraph)))
       (for-each
        (lambda (vars)
          (for-each
@@ -846,7 +845,7 @@
                 def
                 (list (br (def-val def) '() 'need #f))))
              (keep def? (ptset->list (var-sets var)))))
-          (varset->list vars)))
+          vars))
        order)))
 
   (define (transform-non-defs-from-top-to-bottom ptrees)

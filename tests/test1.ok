@@ -1,25 +1,123 @@
-> (begin (step) (test 10 20 30 40) (exit))
-*** STOPPED IN (string)@1.16-1.20
+> (begin (pp test) (step) (test 10 20 30 40) (exit))
+(lambda (a b c d)
+  ((lambda (e f g h i j k l mv m)
+     ((lambda (n o p q)
+        (set! a (+ a 1))
+        (set! b (+ b 1))
+        (set! c (+ c 1))
+        (set! d (+ d 1))
+        (set! e (+ e 1))
+        (set! f (+ f 1))
+        (set! g (+ g 1))
+        (set! h (+ h 1))
+        (set! i (+ i 1))
+        (set! j (+ j 1))
+        (set! k (+ k 1))
+        (set! l (+ l 1))
+        (set! m (+ m 1))
+        (set! n (+ n 1))
+        (set! o (+ o 1))
+        (if (and a b)
+            (force (begin
+                     (set! p (+ p 1))
+                     (set! q (+ q 1))
+                     (delay (set! z (+ z 1))))))
+        (append (case a ((11) (list a)) (else '()))
+                (case b ((20) '()) (else (list b)))
+                (if (or a b) (list c) '())
+                (if (not d) (list f e d) (list d e f))
+                (cond (g => list) (else '()))
+                (cond ((list h)) (else '()))
+                (cond (i `(,@(list i j) #(,k ,l) ,z)))
+                ((letrec ((loop (lambda (i)
+                                  (if (< i 10) (loop (* i 2)) (list i)))))
+                   loop)
+                 1)
+                (letrec ((##do-loop##
+                          (lambda (i j)
+                            (if (< i j)
+                                (list i)
+                                (begin
+                                  (set! j (- j 1))
+                                  (##do-loop## (* i 3) j))))))
+                  (##do-loop## 1 10))
+                (guard (e ((char? e) '("char"))
+                          ((number? e) (list (+ 5000 e))))
+                  (+ 6000 (raise 1)))
+                (guard (x (7000))
+                  (guard (e ((char? e) '("char"))) (+ 8000 (raise 2))))))
+      ((lambda () 1000))
+      ((lambda (w) 2000) 1)
+      ((lambda (w x) 3000) 1 2)
+      ((lambda (w x y) 4000) 1 2 3)))
+   (let ((w 1) (x 2) (y 3)) 100)
+   (let ((w 1)) (let ((x 2)) (let ((y 3)) 200)))
+   (letrec ((w 1) (x 2) (y 3)) 300)
+   (let () (define w 1) (define x 2) (define y 3) 400)
+   (let-values ((() (values))
+                (a (values))
+                (b 1)
+                (c (values 1 2))
+                ((d) 3)
+                ((e . f) 4)
+                ((g . h) (values 5 6))
+                ((i j) (values 7 8)))
+     10)
+   (let-values ((() (values)))
+     (let-values ((a (values)))
+       (let-values ((b 1))
+         (let-values ((c (values 1 2)))
+           (let-values (((d) 3))
+             (let-values (((e . f) 4))
+               (let-values (((g . h) (values 5 6)))
+                 (let-values (((i j) (values 7 8))) 20))))))))
+   (letrec-values ((() (values))
+                   (a (values))
+                   (b 1)
+                   (c (values 1 2))
+                   ((d) 3)
+                   ((e . f) 4)
+                   ((g . h) (values 5 6))
+                   ((i j) (values 7 8)))
+     30)
+   (letrec*-values ((() (values))
+                    (a (values))
+                    (b 1)
+                    (c (values 1 2))
+                    ((d) 3)
+                    ((e . f) 4)
+                    ((g . h) (values 5 6))
+                    ((i j) (values 7 8)))
+     40)
+   (let ()
+     (define-values (a12 b12 c12)
+       (values 11 (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1))))) 22))
+     (define-values (d12 e12 f12)
+       (values 111 (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1))))) 222))
+     (b12 1)
+     (e12 1))
+   ((lambda w 400) 1 2 3)))
+*** STOPPED IN (string)@1.26-1.30
 1> ,s
 | > test
 | #<procedure #2 test>
-*** STOPPED IN (string)@1.21-1.23
+*** STOPPED IN (string)@1.31-1.33
 1> ,s
 | > 10
 | 10
-*** STOPPED IN (string)@1.24-1.26
+*** STOPPED IN (string)@1.34-1.36
 1> ,s
 | > 20
 | 20
-*** STOPPED IN (string)@1.27-1.29
+*** STOPPED IN (string)@1.37-1.39
 1> ,s
 | > 30
 | 30
-*** STOPPED IN (string)@1.30-1.32
+*** STOPPED IN (string)@1.40-1.42
 1> ,s
 | > 40
 | 40
-*** STOPPED IN (string)@1.15-1.33
+*** STOPPED IN (string)@1.25-1.43
 1> ,s
 | > (test 10 20 30 40)
 *** STOPPED IN test, "debug.scm"@46.4-86.38
@@ -28,7 +126,7 @@ b = 20
 c = 30
 d = 40
 1> ,s
-| | > (lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set! ...
+| | > (lambda (e f g h i j k l mv m) ((lambda (n o p q) (set! a (+ a 1)) (se...
 | | #<procedure #3>
 *** STOPPED IN test, "debug.scm"@87.13-87.14
 a = 10
@@ -1323,15 +1421,167 @@ d = 40
 1> ,s
 | | > 40
 | | 40
-*** STOPPED IN test, "debug.scm"@95.5-95.19
+*** STOPPED IN test, "debug.scm"@97.9-97.15
+a12 = #!unbound
+b12 = #!unbound
+c12 = #!unbound
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
 a = 10
 b = 20
 c = 30
 d = 40
 1> ,s
-| | > (lambda w 400)
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@97.16-97.18
+a12 = #!unbound
+b12 = #!unbound
+c12 = #!unbound
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 11
+| | 11
+*** STOPPED IN test, "debug.scm"@97.19-97.72
+a12 = #!unbound
+b12 = #!unbound
+c12 = #!unbound
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
 | | #<procedure #5>
-*** STOPPED IN test, "debug.scm"@95.20-95.21
+*** STOPPED IN test, "debug.scm"@97.73-97.75
+a12 = #!unbound
+b12 = #!unbound
+c12 = #!unbound
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 22
+| | 22
+*** STOPPED IN test, "debug.scm"@97.8-97.76
+a12 = #!unbound
+b12 = #!unbound
+c12 = #!unbound
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 11 (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1))))) 22)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@99.9-99.15
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@99.16-99.19
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 111
+| | 111
+*** STOPPED IN test, "debug.scm"@99.20-99.73
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+| | #<procedure #6>
+*** STOPPED IN test, "debug.scm"@99.74-99.77
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 222
+| | 222
+*** STOPPED IN test, "debug.scm"@99.8-99.78
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = #!unbound
+e12 = #!unbound
+f12 = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 111 (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1))))) 222)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@100.7-100.10
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > b12
+| | #<procedure #5 b12>
+*** STOPPED IN test, "debug.scm"@100.11-100.12
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
 a = 10
 b = 20
 c = 30
@@ -1339,7 +1589,1069 @@ d = 40
 1> ,s
 | | > 1
 | | 1
-*** STOPPED IN test, "debug.scm"@95.22-95.23
+*** STOPPED IN test, "debug.scm"@100.6-100.13
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (b12 1)
+*** STOPPED IN b12, "debug.scm"@97.36-97.37
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > <
+| | | #<procedure #7 <>
+*** STOPPED IN b12, "debug.scm"@97.38-97.39
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > n
+| | | 1
+*** STOPPED IN b12, "debug.scm"@97.40-97.41
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 0
+| | | 0
+*** STOPPED IN b12, "debug.scm"@97.35-97.42
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (< n 0)
+| | | #f
+*** STOPPED IN b12, "debug.scm"@97.46-97.47
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > +
+| | | #<procedure #8 +>
+*** STOPPED IN b12, "debug.scm"@97.48-97.51
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > a12
+| | | 11
+*** STOPPED IN b12, "debug.scm"@97.52-97.55
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > f12
+| | | 222
+*** STOPPED IN b12, "debug.scm"@97.57-97.60
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > e12
+| | | #<procedure #6 e12>
+*** STOPPED IN b12, "debug.scm"@97.62-97.63
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > -
+| | | #<procedure #9 ->
+*** STOPPED IN b12, "debug.scm"@97.64-97.65
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > n
+| | | 1
+*** STOPPED IN b12, "debug.scm"@97.66-97.67
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN b12, "debug.scm"@97.61-97.68
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (- n 1)
+| | | 0
+*** STOPPED IN b12, "debug.scm"@97.56-97.69
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (e12 (- n 1))
+*** STOPPED IN e12, "debug.scm"@99.37-99.38
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > <
+| | | | #<procedure #7 <>
+*** STOPPED IN e12, "debug.scm"@99.39-99.40
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > n
+| | | | 0
+*** STOPPED IN e12, "debug.scm"@99.41-99.42
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 0
+| | | | 0
+*** STOPPED IN e12, "debug.scm"@99.36-99.43
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (< n 0)
+| | | | #f
+*** STOPPED IN e12, "debug.scm"@99.47-99.48
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > *
+| | | | #<procedure #10 *>
+*** STOPPED IN e12, "debug.scm"@99.49-99.52
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > d12
+| | | | 111
+*** STOPPED IN e12, "debug.scm"@99.53-99.56
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > c12
+| | | | 22
+*** STOPPED IN e12, "debug.scm"@99.58-99.61
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > b12
+| | | | #<procedure #5 b12>
+*** STOPPED IN e12, "debug.scm"@99.63-99.64
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > -
+| | | | #<procedure #9 ->
+*** STOPPED IN e12, "debug.scm"@99.65-99.66
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > n
+| | | | 0
+*** STOPPED IN e12, "debug.scm"@99.67-99.68
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 1
+| | | | 1
+*** STOPPED IN e12, "debug.scm"@99.62-99.69
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (- n 1)
+| | | | -1
+*** STOPPED IN e12, "debug.scm"@99.57-99.70
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (b12 (- n 1))
+*** STOPPED IN b12, "debug.scm"@97.36-97.37
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > <
+| | | | | #<procedure #7 <>
+*** STOPPED IN b12, "debug.scm"@97.38-97.39
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > n
+| | | | | -1
+*** STOPPED IN b12, "debug.scm"@97.40-97.41
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > 0
+| | | | | 0
+*** STOPPED IN b12, "debug.scm"@97.35-97.42
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > (< n 0)
+| | | | | #t
+*** STOPPED IN b12, "debug.scm"@97.43-97.44
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > n
+| | | | | -1
+| | | | -1
+*** STOPPED IN e12, "debug.scm"@99.46-99.71
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (* d12 c12 (b12 (- n 1)))
+| | | | -2442
+| | | -2442
+*** STOPPED IN b12, "debug.scm"@97.45-97.70
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (+ a12 f12 (e12 (- n 1)))
+| | | -2209
+| | -2209
+*** STOPPED IN test, "debug.scm"@101.7-101.10
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > e12
+| | #<procedure #6 e12>
+*** STOPPED IN test, "debug.scm"@101.11-101.12
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@101.6-101.13
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (e12 1)
+*** STOPPED IN e12, "debug.scm"@99.37-99.38
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > <
+| | | #<procedure #7 <>
+*** STOPPED IN e12, "debug.scm"@99.39-99.40
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > n
+| | | 1
+*** STOPPED IN e12, "debug.scm"@99.41-99.42
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 0
+| | | 0
+*** STOPPED IN e12, "debug.scm"@99.36-99.43
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (< n 0)
+| | | #f
+*** STOPPED IN e12, "debug.scm"@99.47-99.48
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > *
+| | | #<procedure #10 *>
+*** STOPPED IN e12, "debug.scm"@99.49-99.52
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > d12
+| | | 111
+*** STOPPED IN e12, "debug.scm"@99.53-99.56
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > c12
+| | | 22
+*** STOPPED IN e12, "debug.scm"@99.58-99.61
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > b12
+| | | #<procedure #5 b12>
+*** STOPPED IN e12, "debug.scm"@99.63-99.64
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > -
+| | | #<procedure #9 ->
+*** STOPPED IN e12, "debug.scm"@99.65-99.66
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > n
+| | | 1
+*** STOPPED IN e12, "debug.scm"@99.67-99.68
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN e12, "debug.scm"@99.62-99.69
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (- n 1)
+| | | 0
+*** STOPPED IN e12, "debug.scm"@99.57-99.70
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (b12 (- n 1))
+*** STOPPED IN b12, "debug.scm"@97.36-97.37
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > <
+| | | | #<procedure #7 <>
+*** STOPPED IN b12, "debug.scm"@97.38-97.39
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > n
+| | | | 0
+*** STOPPED IN b12, "debug.scm"@97.40-97.41
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 0
+| | | | 0
+*** STOPPED IN b12, "debug.scm"@97.35-97.42
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (< n 0)
+| | | | #f
+*** STOPPED IN b12, "debug.scm"@97.46-97.47
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > +
+| | | | #<procedure #8 +>
+*** STOPPED IN b12, "debug.scm"@97.48-97.51
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > a12
+| | | | 11
+*** STOPPED IN b12, "debug.scm"@97.52-97.55
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > f12
+| | | | 222
+*** STOPPED IN b12, "debug.scm"@97.57-97.60
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > e12
+| | | | #<procedure #6 e12>
+*** STOPPED IN b12, "debug.scm"@97.62-97.63
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > -
+| | | | #<procedure #9 ->
+*** STOPPED IN b12, "debug.scm"@97.64-97.65
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > n
+| | | | 0
+*** STOPPED IN b12, "debug.scm"@97.66-97.67
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 1
+| | | | 1
+*** STOPPED IN b12, "debug.scm"@97.61-97.68
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (- n 1)
+| | | | -1
+*** STOPPED IN b12, "debug.scm"@97.56-97.69
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (e12 (- n 1))
+*** STOPPED IN e12, "debug.scm"@99.37-99.38
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > <
+| | | | | #<procedure #7 <>
+*** STOPPED IN e12, "debug.scm"@99.39-99.40
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > n
+| | | | | -1
+*** STOPPED IN e12, "debug.scm"@99.41-99.42
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > 0
+| | | | | 0
+*** STOPPED IN e12, "debug.scm"@99.36-99.43
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > (< n 0)
+| | | | | #t
+*** STOPPED IN e12, "debug.scm"@99.44-99.45
+n = -1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | | > n
+| | | | | -1
+| | | | -1
+*** STOPPED IN b12, "debug.scm"@97.45-97.70
+n = 0
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > (+ a12 f12 (e12 (- n 1)))
+| | | | 232
+| | | 232
+*** STOPPED IN e12, "debug.scm"@99.46-99.71
+n = 1
+a12 = 11
+b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
+c12 = 22
+d12 = 111
+e12 = (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1)))))
+f12 = 222
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (* d12 c12 (b12 (- n 1)))
+| | | 566544
+| | 566544
+*** STOPPED IN test, "debug.scm"@102.5-102.19
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (lambda w 400)
+| | #<procedure #11>
+*** STOPPED IN test, "debug.scm"@102.20-102.21
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@102.22-102.23
 a = 10
 b = 20
 c = 30
@@ -1347,7 +2659,7 @@ d = 40
 1> ,s
 | | > 2
 | | 2
-*** STOPPED IN test, "debug.scm"@95.24-95.25
+*** STOPPED IN test, "debug.scm"@102.24-102.25
 a = 10
 b = 20
 c = 30
@@ -1355,14 +2667,14 @@ d = 40
 1> ,s
 | | > 3
 | | 3
-*** STOPPED IN test, "debug.scm"@95.4-95.26
+*** STOPPED IN test, "debug.scm"@102.4-102.26
 a = 10
 b = 20
 c = 30
 d = 40
 1> ,s
 | | > ((lambda w 400) 1 2 3)
-*** STOPPED IN #<procedure #5>, "debug.scm"@95.15-95.18
+*** STOPPED IN #<procedure #11>, "debug.scm"@102.15-102.18
 w = '(1 2 3)
 a = 10
 b = 20
@@ -1372,13 +2684,13 @@ d = 40
 | | | > 400
 | | | 400
 | | 400
-*** STOPPED IN test, "debug.scm"@46.3-95.27
+*** STOPPED IN test, "debug.scm"@46.3-102.27
 a = 10
 b = 20
 c = 30
 d = 40
 1> ,s
-| | > ((lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set!...
+| | > ((lambda (e f g h i j k l mv m) ((lambda (n o p q) (set! a (+ a 1)) (s...
 *** STOPPED IN #<procedure #3>, "debug.scm"@47.7-82.43
 e = 100
 f = 200
@@ -1388,6 +2700,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1395,7 +2708,7 @@ c = 30
 d = 40
 1> ,s
 | | | > (lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1))...
-| | | #<procedure #6>
+| | | #<procedure #12>
 *** STOPPED IN #<procedure #3>, "debug.scm"@83.8-83.24
 e = 100
 f = 200
@@ -1405,6 +2718,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1412,7 +2726,7 @@ c = 30
 d = 40
 1> ,s
 | | | > (lambda () 1000)
-| | | #<procedure #7>
+| | | #<procedure #13>
 *** STOPPED IN #<procedure #3>, "debug.scm"@83.7-83.25
 e = 100
 f = 200
@@ -1422,6 +2736,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1429,7 +2744,7 @@ c = 30
 d = 40
 1> ,s
 | | | > ((lambda () 1000))
-*** STOPPED IN #<procedure #7>, "debug.scm"@83.19-83.23
+*** STOPPED IN #<procedure #13>, "debug.scm"@83.19-83.23
 e = 100
 f = 200
 g = 300
@@ -1438,6 +2753,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1456,6 +2772,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1463,7 +2780,7 @@ c = 30
 d = 40
 1> ,s
 | | | > (lambda (w) 2000)
-| | | #<procedure #8>
+| | | #<procedure #14>
 *** STOPPED IN #<procedure #3>, "debug.scm"@84.26-84.27
 e = 100
 f = 200
@@ -1473,6 +2790,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1490,6 +2808,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1497,7 +2816,7 @@ c = 30
 d = 40
 1> ,s
 | | | > ((lambda (w) 2000) 1)
-*** STOPPED IN #<procedure #8>, "debug.scm"@84.20-84.24
+*** STOPPED IN #<procedure #14>, "debug.scm"@84.20-84.24
 w = 1
 e = 100
 f = 200
@@ -1507,6 +2826,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1525,6 +2845,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1532,7 +2853,7 @@ c = 30
 d = 40
 1> ,s
 | | | > (lambda (w x) 3000)
-| | | #<procedure #9>
+| | | #<procedure #15>
 *** STOPPED IN #<procedure #3>, "debug.scm"@85.28-85.29
 e = 100
 f = 200
@@ -1542,6 +2863,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1559,6 +2881,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1576,6 +2899,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1583,7 +2907,7 @@ c = 30
 d = 40
 1> ,s
 | | | > ((lambda (w x) 3000) 1 2)
-*** STOPPED IN #<procedure #9>, "debug.scm"@85.22-85.26
+*** STOPPED IN #<procedure #15>, "debug.scm"@85.22-85.26
 w = 1
 x = 2
 e = 100
@@ -1594,6 +2918,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1612,6 +2937,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1619,7 +2945,7 @@ c = 30
 d = 40
 1> ,s
 | | | > (lambda (w x y) 4000)
-| | | #<procedure #10>
+| | | #<procedure #16>
 *** STOPPED IN #<procedure #3>, "debug.scm"@86.30-86.31
 e = 100
 f = 200
@@ -1629,6 +2955,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1646,6 +2973,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1663,6 +2991,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1680,6 +3009,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1687,7 +3017,7 @@ c = 30
 d = 40
 1> ,s
 | | | > ((lambda (w x y) 4000) 1 2 3)
-*** STOPPED IN #<procedure #10>, "debug.scm"@86.24-86.28
+*** STOPPED IN #<procedure #16>, "debug.scm"@86.24-86.28
 w = 1
 x = 2
 y = 3
@@ -1699,6 +3029,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1717,6 +3048,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1724,7 +3056,7 @@ c = 30
 d = 40
 1> ,s
 | | > ((lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1)) ...
-*** STOPPED IN #<procedure #6>, "debug.scm"@48.18-48.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@48.18-48.19
 n = 1000
 o = 2000
 p = 3000
@@ -1737,6 +3069,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1744,8 +3077,8 @@ c = 30
 d = 40
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@48.20-48.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@48.20-48.21
 n = 1000
 o = 2000
 p = 3000
@@ -1758,6 +3091,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1766,7 +3100,7 @@ d = 40
 1> ,s
 | | | > a
 | | | 10
-*** STOPPED IN #<procedure #6>, "debug.scm"@48.22-48.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@48.22-48.23
 n = 1000
 o = 2000
 p = 3000
@@ -1779,6 +3113,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1787,7 +3122,7 @@ d = 40
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@48.17-48.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@48.17-48.24
 n = 1000
 o = 2000
 p = 3000
@@ -1800,6 +3135,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1808,7 +3144,7 @@ d = 40
 1> ,s
 | | | > (+ a 1)
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@48.9-48.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@48.9-48.25
 n = 1000
 o = 2000
 p = 3000
@@ -1821,6 +3157,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 10
 b = 20
@@ -1829,7 +3166,7 @@ d = 40
 1> ,s
 | | | > (set! a (+ a 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@49.18-49.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@49.18-49.19
 n = 1000
 o = 2000
 p = 3000
@@ -1842,6 +3179,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 20
@@ -1849,8 +3187,8 @@ c = 30
 d = 40
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@49.20-49.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@49.20-49.21
 n = 1000
 o = 2000
 p = 3000
@@ -1863,6 +3201,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 20
@@ -1871,7 +3210,7 @@ d = 40
 1> ,s
 | | | > b
 | | | 20
-*** STOPPED IN #<procedure #6>, "debug.scm"@49.22-49.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@49.22-49.23
 n = 1000
 o = 2000
 p = 3000
@@ -1884,6 +3223,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 20
@@ -1892,7 +3232,7 @@ d = 40
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@49.17-49.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@49.17-49.24
 n = 1000
 o = 2000
 p = 3000
@@ -1905,6 +3245,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 20
@@ -1913,7 +3254,7 @@ d = 40
 1> ,s
 | | | > (+ b 1)
 | | | 21
-*** STOPPED IN #<procedure #6>, "debug.scm"@49.9-49.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@49.9-49.25
 n = 1000
 o = 2000
 p = 3000
@@ -1926,6 +3267,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 20
@@ -1934,7 +3276,7 @@ d = 40
 1> ,s
 | | | > (set! b (+ b 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@50.18-50.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@50.18-50.19
 n = 1000
 o = 2000
 p = 3000
@@ -1947,6 +3289,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -1954,8 +3297,8 @@ c = 30
 d = 40
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@50.20-50.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@50.20-50.21
 n = 1000
 o = 2000
 p = 3000
@@ -1968,6 +3311,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -1976,7 +3320,7 @@ d = 40
 1> ,s
 | | | > c
 | | | 30
-*** STOPPED IN #<procedure #6>, "debug.scm"@50.22-50.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@50.22-50.23
 n = 1000
 o = 2000
 p = 3000
@@ -1989,6 +3333,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -1997,7 +3342,7 @@ d = 40
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@50.17-50.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@50.17-50.24
 n = 1000
 o = 2000
 p = 3000
@@ -2010,6 +3355,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2018,7 +3364,7 @@ d = 40
 1> ,s
 | | | > (+ c 1)
 | | | 31
-*** STOPPED IN #<procedure #6>, "debug.scm"@50.9-50.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@50.9-50.25
 n = 1000
 o = 2000
 p = 3000
@@ -2031,6 +3377,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2039,7 +3386,7 @@ d = 40
 1> ,s
 | | | > (set! c (+ c 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@51.18-51.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@51.18-51.19
 n = 1000
 o = 2000
 p = 3000
@@ -2052,6 +3399,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2059,8 +3407,8 @@ c = 31
 d = 40
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@51.20-51.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@51.20-51.21
 n = 1000
 o = 2000
 p = 3000
@@ -2073,6 +3421,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2081,7 +3430,7 @@ d = 40
 1> ,s
 | | | > d
 | | | 40
-*** STOPPED IN #<procedure #6>, "debug.scm"@51.22-51.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@51.22-51.23
 n = 1000
 o = 2000
 p = 3000
@@ -2094,6 +3443,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2102,7 +3452,7 @@ d = 40
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@51.17-51.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@51.17-51.24
 n = 1000
 o = 2000
 p = 3000
@@ -2115,6 +3465,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2123,7 +3474,7 @@ d = 40
 1> ,s
 | | | > (+ d 1)
 | | | 41
-*** STOPPED IN #<procedure #6>, "debug.scm"@51.9-51.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@51.9-51.25
 n = 1000
 o = 2000
 p = 3000
@@ -2136,6 +3487,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2144,7 +3496,7 @@ d = 40
 1> ,s
 | | | > (set! d (+ d 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@52.18-52.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@52.18-52.19
 n = 1000
 o = 2000
 p = 3000
@@ -2157,6 +3509,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2164,8 +3517,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@52.20-52.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@52.20-52.21
 n = 1000
 o = 2000
 p = 3000
@@ -2178,6 +3531,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2186,7 +3540,7 @@ d = 41
 1> ,s
 | | | > e
 | | | 100
-*** STOPPED IN #<procedure #6>, "debug.scm"@52.22-52.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@52.22-52.23
 n = 1000
 o = 2000
 p = 3000
@@ -2199,6 +3553,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2207,7 +3562,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@52.17-52.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@52.17-52.24
 n = 1000
 o = 2000
 p = 3000
@@ -2220,6 +3575,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2228,7 +3584,7 @@ d = 41
 1> ,s
 | | | > (+ e 1)
 | | | 101
-*** STOPPED IN #<procedure #6>, "debug.scm"@52.9-52.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@52.9-52.25
 n = 1000
 o = 2000
 p = 3000
@@ -2241,6 +3597,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2249,7 +3606,7 @@ d = 41
 1> ,s
 | | | > (set! e (+ e 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@53.18-53.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@53.18-53.19
 n = 1000
 o = 2000
 p = 3000
@@ -2262,6 +3619,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2269,8 +3627,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@53.20-53.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@53.20-53.21
 n = 1000
 o = 2000
 p = 3000
@@ -2283,6 +3641,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2291,7 +3650,7 @@ d = 41
 1> ,s
 | | | > f
 | | | 200
-*** STOPPED IN #<procedure #6>, "debug.scm"@53.22-53.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@53.22-53.23
 n = 1000
 o = 2000
 p = 3000
@@ -2304,6 +3663,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2312,7 +3672,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@53.17-53.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@53.17-53.24
 n = 1000
 o = 2000
 p = 3000
@@ -2325,6 +3685,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2333,7 +3694,7 @@ d = 41
 1> ,s
 | | | > (+ f 1)
 | | | 201
-*** STOPPED IN #<procedure #6>, "debug.scm"@53.9-53.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@53.9-53.25
 n = 1000
 o = 2000
 p = 3000
@@ -2346,6 +3707,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2354,7 +3716,7 @@ d = 41
 1> ,s
 | | | > (set! f (+ f 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@54.18-54.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@54.18-54.19
 n = 1000
 o = 2000
 p = 3000
@@ -2367,6 +3729,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2374,8 +3737,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@54.20-54.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@54.20-54.21
 n = 1000
 o = 2000
 p = 3000
@@ -2388,6 +3751,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2396,7 +3760,7 @@ d = 41
 1> ,s
 | | | > g
 | | | 300
-*** STOPPED IN #<procedure #6>, "debug.scm"@54.22-54.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@54.22-54.23
 n = 1000
 o = 2000
 p = 3000
@@ -2409,6 +3773,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2417,7 +3782,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@54.17-54.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@54.17-54.24
 n = 1000
 o = 2000
 p = 3000
@@ -2430,6 +3795,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2438,7 +3804,7 @@ d = 41
 1> ,s
 | | | > (+ g 1)
 | | | 301
-*** STOPPED IN #<procedure #6>, "debug.scm"@54.9-54.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@54.9-54.25
 n = 1000
 o = 2000
 p = 3000
@@ -2451,6 +3817,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2459,7 +3826,7 @@ d = 41
 1> ,s
 | | | > (set! g (+ g 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@55.18-55.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@55.18-55.19
 n = 1000
 o = 2000
 p = 3000
@@ -2472,6 +3839,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2479,8 +3847,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@55.20-55.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@55.20-55.21
 n = 1000
 o = 2000
 p = 3000
@@ -2493,6 +3861,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2501,7 +3870,7 @@ d = 41
 1> ,s
 | | | > h
 | | | 400
-*** STOPPED IN #<procedure #6>, "debug.scm"@55.22-55.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@55.22-55.23
 n = 1000
 o = 2000
 p = 3000
@@ -2514,6 +3883,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2522,7 +3892,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@55.17-55.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@55.17-55.24
 n = 1000
 o = 2000
 p = 3000
@@ -2535,6 +3905,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2543,7 +3914,7 @@ d = 41
 1> ,s
 | | | > (+ h 1)
 | | | 401
-*** STOPPED IN #<procedure #6>, "debug.scm"@55.9-55.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@55.9-55.25
 n = 1000
 o = 2000
 p = 3000
@@ -2556,6 +3927,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2564,7 +3936,7 @@ d = 41
 1> ,s
 | | | > (set! h (+ h 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@56.18-56.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@56.18-56.19
 n = 1000
 o = 2000
 p = 3000
@@ -2577,6 +3949,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2584,8 +3957,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@56.20-56.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@56.20-56.21
 n = 1000
 o = 2000
 p = 3000
@@ -2598,6 +3971,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2606,7 +3980,7 @@ d = 41
 1> ,s
 | | | > i
 | | | 10
-*** STOPPED IN #<procedure #6>, "debug.scm"@56.22-56.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@56.22-56.23
 n = 1000
 o = 2000
 p = 3000
@@ -2619,6 +3993,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2627,7 +4002,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@56.17-56.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@56.17-56.24
 n = 1000
 o = 2000
 p = 3000
@@ -2640,6 +4015,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2648,7 +4024,7 @@ d = 41
 1> ,s
 | | | > (+ i 1)
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@56.9-56.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@56.9-56.25
 n = 1000
 o = 2000
 p = 3000
@@ -2661,6 +4037,7 @@ i = 10
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2669,7 +4046,7 @@ d = 41
 1> ,s
 | | | > (set! i (+ i 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@57.18-57.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@57.18-57.19
 n = 1000
 o = 2000
 p = 3000
@@ -2682,6 +4059,7 @@ i = 11
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2689,8 +4067,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@57.20-57.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@57.20-57.21
 n = 1000
 o = 2000
 p = 3000
@@ -2703,6 +4081,7 @@ i = 11
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2711,7 +4090,7 @@ d = 41
 1> ,s
 | | | > j
 | | | 20
-*** STOPPED IN #<procedure #6>, "debug.scm"@57.22-57.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@57.22-57.23
 n = 1000
 o = 2000
 p = 3000
@@ -2724,6 +4103,7 @@ i = 11
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2732,7 +4112,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@57.17-57.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@57.17-57.24
 n = 1000
 o = 2000
 p = 3000
@@ -2745,6 +4125,7 @@ i = 11
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2753,7 +4134,7 @@ d = 41
 1> ,s
 | | | > (+ j 1)
 | | | 21
-*** STOPPED IN #<procedure #6>, "debug.scm"@57.9-57.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@57.9-57.25
 n = 1000
 o = 2000
 p = 3000
@@ -2766,6 +4147,7 @@ i = 11
 j = 20
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2774,7 +4156,7 @@ d = 41
 1> ,s
 | | | > (set! j (+ j 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@58.18-58.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@58.18-58.19
 n = 1000
 o = 2000
 p = 3000
@@ -2787,6 +4169,7 @@ i = 11
 j = 21
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2794,8 +4177,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@58.20-58.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@58.20-58.21
 n = 1000
 o = 2000
 p = 3000
@@ -2808,6 +4191,7 @@ i = 11
 j = 21
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2816,7 +4200,7 @@ d = 41
 1> ,s
 | | | > k
 | | | 30
-*** STOPPED IN #<procedure #6>, "debug.scm"@58.22-58.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@58.22-58.23
 n = 1000
 o = 2000
 p = 3000
@@ -2829,6 +4213,7 @@ i = 11
 j = 21
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2837,7 +4222,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@58.17-58.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@58.17-58.24
 n = 1000
 o = 2000
 p = 3000
@@ -2850,6 +4235,7 @@ i = 11
 j = 21
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2858,7 +4244,7 @@ d = 41
 1> ,s
 | | | > (+ k 1)
 | | | 31
-*** STOPPED IN #<procedure #6>, "debug.scm"@58.9-58.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@58.9-58.25
 n = 1000
 o = 2000
 p = 3000
@@ -2871,6 +4257,7 @@ i = 11
 j = 21
 k = 30
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2879,7 +4266,7 @@ d = 41
 1> ,s
 | | | > (set! k (+ k 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@59.18-59.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@59.18-59.19
 n = 1000
 o = 2000
 p = 3000
@@ -2892,6 +4279,7 @@ i = 11
 j = 21
 k = 31
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2899,8 +4287,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@59.20-59.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@59.20-59.21
 n = 1000
 o = 2000
 p = 3000
@@ -2913,6 +4301,7 @@ i = 11
 j = 21
 k = 31
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2921,7 +4310,7 @@ d = 41
 1> ,s
 | | | > l
 | | | 40
-*** STOPPED IN #<procedure #6>, "debug.scm"@59.22-59.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@59.22-59.23
 n = 1000
 o = 2000
 p = 3000
@@ -2934,6 +4323,7 @@ i = 11
 j = 21
 k = 31
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2942,7 +4332,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@59.17-59.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@59.17-59.24
 n = 1000
 o = 2000
 p = 3000
@@ -2955,6 +4345,7 @@ i = 11
 j = 21
 k = 31
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2963,7 +4354,7 @@ d = 41
 1> ,s
 | | | > (+ l 1)
 | | | 41
-*** STOPPED IN #<procedure #6>, "debug.scm"@59.9-59.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@59.9-59.25
 n = 1000
 o = 2000
 p = 3000
@@ -2976,6 +4367,7 @@ i = 11
 j = 21
 k = 31
 l = 40
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -2984,7 +4376,7 @@ d = 41
 1> ,s
 | | | > (set! l (+ l 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@60.18-60.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@60.18-60.19
 n = 1000
 o = 2000
 p = 3000
@@ -2997,6 +4389,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -3004,8 +4397,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@60.20-60.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@60.20-60.21
 n = 1000
 o = 2000
 p = 3000
@@ -3018,6 +4411,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -3026,7 +4420,7 @@ d = 41
 1> ,s
 | | | > m
 | | | 400
-*** STOPPED IN #<procedure #6>, "debug.scm"@60.22-60.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@60.22-60.23
 n = 1000
 o = 2000
 p = 3000
@@ -3039,6 +4433,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -3047,7 +4442,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@60.17-60.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@60.17-60.24
 n = 1000
 o = 2000
 p = 3000
@@ -3060,6 +4455,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -3068,7 +4464,7 @@ d = 41
 1> ,s
 | | | > (+ m 1)
 | | | 401
-*** STOPPED IN #<procedure #6>, "debug.scm"@60.9-60.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@60.9-60.25
 n = 1000
 o = 2000
 p = 3000
@@ -3081,6 +4477,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 400
 a = 11
 b = 21
@@ -3089,7 +4486,7 @@ d = 41
 1> ,s
 | | | > (set! m (+ m 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@61.18-61.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@61.18-61.19
 n = 1000
 o = 2000
 p = 3000
@@ -3102,6 +4499,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3109,8 +4507,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@61.20-61.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@61.20-61.21
 n = 1000
 o = 2000
 p = 3000
@@ -3123,6 +4521,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3131,7 +4530,7 @@ d = 41
 1> ,s
 | | | > n
 | | | 1000
-*** STOPPED IN #<procedure #6>, "debug.scm"@61.22-61.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@61.22-61.23
 n = 1000
 o = 2000
 p = 3000
@@ -3144,6 +4543,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3152,7 +4552,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@61.17-61.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@61.17-61.24
 n = 1000
 o = 2000
 p = 3000
@@ -3165,6 +4565,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3173,7 +4574,7 @@ d = 41
 1> ,s
 | | | > (+ n 1)
 | | | 1001
-*** STOPPED IN #<procedure #6>, "debug.scm"@61.9-61.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@61.9-61.25
 n = 1000
 o = 2000
 p = 3000
@@ -3186,6 +4587,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3194,7 +4596,7 @@ d = 41
 1> ,s
 | | | > (set! n (+ n 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@62.18-62.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@62.18-62.19
 n = 1001
 o = 2000
 p = 3000
@@ -3207,6 +4609,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3214,8 +4617,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@62.20-62.21
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@62.20-62.21
 n = 1001
 o = 2000
 p = 3000
@@ -3228,6 +4631,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3236,7 +4640,7 @@ d = 41
 1> ,s
 | | | > o
 | | | 2000
-*** STOPPED IN #<procedure #6>, "debug.scm"@62.22-62.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@62.22-62.23
 n = 1001
 o = 2000
 p = 3000
@@ -3249,6 +4653,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3257,7 +4662,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@62.17-62.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@62.17-62.24
 n = 1001
 o = 2000
 p = 3000
@@ -3270,6 +4675,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3278,7 +4684,7 @@ d = 41
 1> ,s
 | | | > (+ o 1)
 | | | 2001
-*** STOPPED IN #<procedure #6>, "debug.scm"@62.9-62.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@62.9-62.25
 n = 1001
 o = 2000
 p = 3000
@@ -3291,6 +4697,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3299,7 +4706,7 @@ d = 41
 1> ,s
 | | | > (set! o (+ o 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@63.18-63.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@63.18-63.19
 n = 1001
 o = 2001
 p = 3000
@@ -3312,6 +4719,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3320,7 +4728,7 @@ d = 41
 1> ,s
 | | | > a
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@63.20-63.21
+*** STOPPED IN #<procedure #12>, "debug.scm"@63.20-63.21
 n = 1001
 o = 2001
 p = 3000
@@ -3333,6 +4741,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3341,7 +4750,7 @@ d = 41
 1> ,s
 | | | > b
 | | | 21
-*** STOPPED IN #<procedure #6>, "debug.scm"@64.14-64.19
+*** STOPPED IN #<procedure #12>, "debug.scm"@64.14-64.19
 n = 1001
 o = 2001
 p = 3000
@@ -3354,6 +4763,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3361,8 +4771,8 @@ c = 31
 d = 41
 1> ,s
 | | | > force
-| | | #<procedure #12 force>
-*** STOPPED IN #<procedure #6>, "debug.scm"@66.25-66.26
+| | | #<procedure #17 force>
+*** STOPPED IN #<procedure #12>, "debug.scm"@66.25-66.26
 n = 1001
 o = 2001
 p = 3000
@@ -3375,6 +4785,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3382,8 +4793,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@66.27-66.28
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@66.27-66.28
 n = 1001
 o = 2001
 p = 3000
@@ -3396,6 +4807,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3404,7 +4816,7 @@ d = 41
 1> ,s
 | | | > p
 | | | 3000
-*** STOPPED IN #<procedure #6>, "debug.scm"@66.29-66.30
+*** STOPPED IN #<procedure #12>, "debug.scm"@66.29-66.30
 n = 1001
 o = 2001
 p = 3000
@@ -3417,6 +4829,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3425,7 +4838,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@66.24-66.31
+*** STOPPED IN #<procedure #12>, "debug.scm"@66.24-66.31
 n = 1001
 o = 2001
 p = 3000
@@ -3438,6 +4851,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3446,7 +4860,7 @@ d = 41
 1> ,s
 | | | > (+ p 1)
 | | | 3001
-*** STOPPED IN #<procedure #6>, "debug.scm"@66.16-66.32
+*** STOPPED IN #<procedure #12>, "debug.scm"@66.16-66.32
 n = 1001
 o = 2001
 p = 3000
@@ -3459,6 +4873,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3467,7 +4882,7 @@ d = 41
 1> ,s
 | | | > (set! p (+ p 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@67.25-67.26
+*** STOPPED IN #<procedure #12>, "debug.scm"@67.25-67.26
 n = 1001
 o = 2001
 p = 3001
@@ -3480,6 +4895,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3487,8 +4903,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@67.27-67.28
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@67.27-67.28
 n = 1001
 o = 2001
 p = 3001
@@ -3501,6 +4917,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3509,7 +4926,7 @@ d = 41
 1> ,s
 | | | > q
 | | | 4000
-*** STOPPED IN #<procedure #6>, "debug.scm"@67.29-67.30
+*** STOPPED IN #<procedure #12>, "debug.scm"@67.29-67.30
 n = 1001
 o = 2001
 p = 3001
@@ -3522,6 +4939,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3530,7 +4948,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@67.24-67.31
+*** STOPPED IN #<procedure #12>, "debug.scm"@67.24-67.31
 n = 1001
 o = 2001
 p = 3001
@@ -3543,6 +4961,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3551,7 +4970,7 @@ d = 41
 1> ,s
 | | | > (+ q 1)
 | | | 4001
-*** STOPPED IN #<procedure #6>, "debug.scm"@67.16-67.32
+*** STOPPED IN #<procedure #12>, "debug.scm"@67.16-67.32
 n = 1001
 o = 2001
 p = 3001
@@ -3564,6 +4983,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3572,7 +4992,7 @@ d = 41
 1> ,s
 | | | > (set! q (+ q 1))
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@68.16-68.40
+*** STOPPED IN #<procedure #12>, "debug.scm"@68.16-68.40
 n = 1001
 o = 2001
 p = 3001
@@ -3585,6 +5005,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3592,8 +5013,8 @@ c = 31
 d = 41
 1> ,s
 | | | > (delay (set! z (+ z 1)))
-| | | #<promise #13>
-*** STOPPED IN #<procedure #6>, "debug.scm"@64.13-68.42
+| | | #<promise #18>
+*** STOPPED IN #<procedure #12>, "debug.scm"@64.13-68.42
 n = 1001
 o = 2001
 p = 3001
@@ -3606,6 +5027,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3613,7 +5035,7 @@ c = 31
 d = 41
 1> ,s
 | | | > (force (begin (set! p (+ p 1)) (set! q (+ q 1)) (delay (set! z (+ z ...
-*** STOPPED IN #<procedure #6>, "debug.scm"@68.32-68.33
+*** STOPPED IN #<procedure #12>, "debug.scm"@68.32-68.33
 n = 1001
 o = 2001
 p = 3001
@@ -3626,6 +5048,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3633,8 +5056,8 @@ c = 31
 d = 41
 1> ,s
 | | | | > +
-| | | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@68.34-68.35
+| | | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@68.34-68.35
 n = 1001
 o = 2001
 p = 3001
@@ -3647,6 +5070,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3655,7 +5079,7 @@ d = 41
 1> ,s
 | | | | > z
 | | | | 10000
-*** STOPPED IN #<procedure #6>, "debug.scm"@68.36-68.37
+*** STOPPED IN #<procedure #12>, "debug.scm"@68.36-68.37
 n = 1001
 o = 2001
 p = 3001
@@ -3668,6 +5092,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3676,7 +5101,7 @@ d = 41
 1> ,s
 | | | | > 1
 | | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@68.31-68.38
+*** STOPPED IN #<procedure #12>, "debug.scm"@68.31-68.38
 n = 1001
 o = 2001
 p = 3001
@@ -3689,6 +5114,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3697,7 +5123,7 @@ d = 41
 1> ,s
 | | | | > (+ z 1)
 | | | | 10001
-*** STOPPED IN #<procedure #6>, "debug.scm"@68.23-68.39
+*** STOPPED IN #<procedure #12>, "debug.scm"@68.23-68.39
 n = 1001
 o = 2001
 p = 3001
@@ -3710,6 +5136,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3719,7 +5146,7 @@ d = 41
 | | | | > (set! z (+ z 1))
 | | | | #!void
 | | | #!void
-*** STOPPED IN #<procedure #6>, "debug.scm"@69.10-69.16
+*** STOPPED IN #<procedure #12>, "debug.scm"@69.10-69.16
 n = 1001
 o = 2001
 p = 3001
@@ -3732,6 +5159,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3739,8 +5167,8 @@ c = 31
 d = 41
 1> ,s
 | | | > append
-| | | #<procedure #14 append>
-*** STOPPED IN #<procedure #6>, "debug.scm"@69.23-69.24
+| | | #<procedure #19 append>
+*** STOPPED IN #<procedure #12>, "debug.scm"@69.23-69.24
 n = 1001
 o = 2001
 p = 3001
@@ -3753,6 +5181,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3761,7 +5190,7 @@ d = 41
 1> ,s
 | | | > a
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@69.32-69.36
+*** STOPPED IN #<procedure #12>, "debug.scm"@69.32-69.36
 n = 1001
 o = 2001
 p = 3001
@@ -3774,6 +5203,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3781,8 +5211,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@69.37-69.38
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@69.37-69.38
 n = 1001
 o = 2001
 p = 3001
@@ -3795,6 +5225,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3803,7 +5234,7 @@ d = 41
 1> ,s
 | | | > a
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@69.31-69.39
+*** STOPPED IN #<procedure #12>, "debug.scm"@69.31-69.39
 n = 1001
 o = 2001
 p = 3001
@@ -3816,6 +5247,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3824,7 +5256,7 @@ d = 41
 1> ,s
 | | | > (list a)
 | | | (11)
-*** STOPPED IN #<procedure #6>, "debug.scm"@70.23-70.24
+*** STOPPED IN #<procedure #12>, "debug.scm"@70.23-70.24
 n = 1001
 o = 2001
 p = 3001
@@ -3837,6 +5269,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3845,7 +5278,7 @@ d = 41
 1> ,s
 | | | > b
 | | | 21
-*** STOPPED IN #<procedure #6>, "debug.scm"@70.43-70.47
+*** STOPPED IN #<procedure #12>, "debug.scm"@70.43-70.47
 n = 1001
 o = 2001
 p = 3001
@@ -3858,6 +5291,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3865,8 +5299,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@70.48-70.49
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@70.48-70.49
 n = 1001
 o = 2001
 p = 3001
@@ -3879,6 +5313,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3887,7 +5322,7 @@ d = 41
 1> ,s
 | | | > b
 | | | 21
-*** STOPPED IN #<procedure #6>, "debug.scm"@70.42-70.50
+*** STOPPED IN #<procedure #12>, "debug.scm"@70.42-70.50
 n = 1001
 o = 2001
 p = 3001
@@ -3900,6 +5335,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3908,7 +5344,7 @@ d = 41
 1> ,s
 | | | > (list b)
 | | | (21)
-*** STOPPED IN #<procedure #6>, "debug.scm"@71.25-71.26
+*** STOPPED IN #<procedure #12>, "debug.scm"@71.25-71.26
 n = 1001
 o = 2001
 p = 3001
@@ -3921,6 +5357,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3929,7 +5366,7 @@ d = 41
 1> ,s
 | | | > a
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@71.31-71.35
+*** STOPPED IN #<procedure #12>, "debug.scm"@71.31-71.35
 n = 1001
 o = 2001
 p = 3001
@@ -3942,6 +5379,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3949,8 +5387,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@71.36-71.37
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@71.36-71.37
 n = 1001
 o = 2001
 p = 3001
@@ -3963,6 +5401,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3971,7 +5410,7 @@ d = 41
 1> ,s
 | | | > c
 | | | 31
-*** STOPPED IN #<procedure #6>, "debug.scm"@71.30-71.38
+*** STOPPED IN #<procedure #12>, "debug.scm"@71.30-71.38
 n = 1001
 o = 2001
 p = 3001
@@ -3984,6 +5423,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -3992,7 +5432,7 @@ d = 41
 1> ,s
 | | | > (list c)
 | | | (31)
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.22-72.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.22-72.25
 n = 1001
 o = 2001
 p = 3001
@@ -4005,6 +5445,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4012,8 +5453,8 @@ c = 31
 d = 41
 1> ,s
 | | | > not
-| | | #<procedure #16 not>
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.26-72.27
+| | | #<procedure #21 not>
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.26-72.27
 n = 1001
 o = 2001
 p = 3001
@@ -4026,6 +5467,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4034,7 +5476,7 @@ d = 41
 1> ,s
 | | | > d
 | | | 41
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.21-72.28
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.21-72.28
 n = 1001
 o = 2001
 p = 3001
@@ -4047,6 +5489,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4055,7 +5498,7 @@ d = 41
 1> ,s
 | | | > (not d)
 | | | #f
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.43-72.47
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.43-72.47
 n = 1001
 o = 2001
 p = 3001
@@ -4068,6 +5511,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4075,8 +5519,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.48-72.49
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.48-72.49
 n = 1001
 o = 2001
 p = 3001
@@ -4089,6 +5533,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4097,7 +5542,7 @@ d = 41
 1> ,s
 | | | > d
 | | | 41
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.50-72.51
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.50-72.51
 n = 1001
 o = 2001
 p = 3001
@@ -4110,6 +5555,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4118,7 +5564,7 @@ d = 41
 1> ,s
 | | | > e
 | | | 101
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.52-72.53
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.52-72.53
 n = 1001
 o = 2001
 p = 3001
@@ -4131,6 +5577,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4139,7 +5586,7 @@ d = 41
 1> ,s
 | | | > f
 | | | 201
-*** STOPPED IN #<procedure #6>, "debug.scm"@72.42-72.54
+*** STOPPED IN #<procedure #12>, "debug.scm"@72.42-72.54
 n = 1001
 o = 2001
 p = 3001
@@ -4152,6 +5599,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4160,7 +5608,7 @@ d = 41
 1> ,s
 | | | > (list d e f)
 | | | (41 101 201)
-*** STOPPED IN #<procedure #6>, "debug.scm"@73.24-73.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@73.24-73.25
 n = 1001
 o = 2001
 p = 3001
@@ -4173,6 +5621,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4181,7 +5630,7 @@ d = 41
 1> ,s
 | | | > g
 | | | 301
-*** STOPPED IN #<procedure #6>, "debug.scm"@73.29-73.33
+*** STOPPED IN #<procedure #12>, "debug.scm"@73.29-73.33
 n = 1001
 o = 2001
 p = 3001
@@ -4194,6 +5643,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4201,8 +5651,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@74.25-74.29
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@74.25-74.29
 n = 1001
 o = 2001
 p = 3001
@@ -4215,6 +5665,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4222,8 +5673,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@74.30-74.31
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@74.30-74.31
 n = 1001
 o = 2001
 p = 3001
@@ -4236,6 +5687,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4244,7 +5696,7 @@ d = 41
 1> ,s
 | | | > h
 | | | 401
-*** STOPPED IN #<procedure #6>, "debug.scm"@74.24-74.32
+*** STOPPED IN #<procedure #12>, "debug.scm"@74.24-74.32
 n = 1001
 o = 2001
 p = 3001
@@ -4257,6 +5709,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4265,7 +5718,7 @@ d = 41
 1> ,s
 | | | > (list h)
 | | | (401)
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.24-75.25
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.24-75.25
 n = 1001
 o = 2001
 p = 3001
@@ -4278,6 +5731,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4286,7 +5740,7 @@ d = 41
 1> ,s
 | | | > i
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.31-75.35
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.31-75.35
 n = 1001
 o = 2001
 p = 3001
@@ -4299,6 +5753,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4306,8 +5761,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.36-75.37
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.36-75.37
 n = 1001
 o = 2001
 p = 3001
@@ -4320,6 +5775,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4328,7 +5784,7 @@ d = 41
 1> ,s
 | | | > i
 | | | 11
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.38-75.39
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.38-75.39
 n = 1001
 o = 2001
 p = 3001
@@ -4341,6 +5797,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4349,7 +5806,7 @@ d = 41
 1> ,s
 | | | > j
 | | | 21
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.30-75.40
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.30-75.40
 n = 1001
 o = 2001
 p = 3001
@@ -4362,6 +5819,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4370,7 +5828,7 @@ d = 41
 1> ,s
 | | | > (list i j)
 | | | (11 21)
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.44-75.45
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.44-75.45
 n = 1001
 o = 2001
 p = 3001
@@ -4383,6 +5841,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4391,7 +5850,7 @@ d = 41
 1> ,s
 | | | > k
 | | | 31
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.47-75.48
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.47-75.48
 n = 1001
 o = 2001
 p = 3001
@@ -4404,6 +5863,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4412,7 +5872,7 @@ d = 41
 1> ,s
 | | | > l
 | | | 41
-*** STOPPED IN #<procedure #6>, "debug.scm"@75.51-75.52
+*** STOPPED IN #<procedure #12>, "debug.scm"@75.51-75.52
 n = 1001
 o = 2001
 p = 3001
@@ -4425,6 +5885,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4433,7 +5894,7 @@ d = 41
 1> ,s
 | | | > z
 | | | 10001
-*** STOPPED IN #<procedure #6>, "debug.scm"@76.31-76.32
+*** STOPPED IN #<procedure #12>, "debug.scm"@76.31-76.32
 n = 1001
 o = 2001
 p = 3001
@@ -4446,6 +5907,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4469,6 +5931,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4476,7 +5939,7 @@ c = 31
 d = 41
 1> ,s
 | | | > <
-| | | #<procedure #17 <>
+| | | #<procedure #7 <>
 *** STOPPED IN loop, "debug.scm"@76.42-76.43
 i = 1
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -4492,6 +5955,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4515,6 +5979,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4538,6 +6003,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4561,6 +6027,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4568,7 +6035,7 @@ c = 31
 d = 41
 1> ,s
 | | | > loop
-| | | #<procedure #18 loop>
+| | | #<procedure #22 loop>
 *** STOPPED IN loop, "debug.scm"@76.55-76.56
 i = 1
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -4584,6 +6051,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4591,7 +6059,7 @@ c = 31
 d = 41
 1> ,s
 | | | > *
-| | | #<procedure #19 *>
+| | | #<procedure #10 *>
 *** STOPPED IN loop, "debug.scm"@76.57-76.58
 i = 1
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -4607,6 +6075,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4630,6 +6099,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4653,6 +6123,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4676,6 +6147,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4698,6 +6170,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4705,7 +6178,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > <
-| | | | #<procedure #17 <>
+| | | | #<procedure #7 <>
 *** STOPPED IN loop, "debug.scm"@76.42-76.43
 i = 2
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -4721,6 +6194,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4744,6 +6218,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4767,6 +6242,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4790,6 +6266,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4797,7 +6274,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > loop
-| | | | #<procedure #18 loop>
+| | | | #<procedure #22 loop>
 *** STOPPED IN loop, "debug.scm"@76.55-76.56
 i = 2
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -4813,6 +6290,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4820,7 +6298,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > *
-| | | | #<procedure #19 *>
+| | | | #<procedure #10 *>
 *** STOPPED IN loop, "debug.scm"@76.57-76.58
 i = 2
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -4836,6 +6314,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4859,6 +6338,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4882,6 +6362,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4905,6 +6386,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4927,6 +6409,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4934,7 +6417,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > <
-| | | | #<procedure #17 <>
+| | | | #<procedure #7 <>
 *** STOPPED IN loop, "debug.scm"@76.42-76.43
 i = 4
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -4950,6 +6433,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4973,6 +6457,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -4996,6 +6481,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5019,6 +6505,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5026,7 +6513,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > loop
-| | | | #<procedure #18 loop>
+| | | | #<procedure #22 loop>
 *** STOPPED IN loop, "debug.scm"@76.55-76.56
 i = 4
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -5042,6 +6529,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5049,7 +6537,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > *
-| | | | #<procedure #19 *>
+| | | | #<procedure #10 *>
 *** STOPPED IN loop, "debug.scm"@76.57-76.58
 i = 4
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -5065,6 +6553,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5088,6 +6577,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5111,6 +6601,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5134,6 +6625,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5156,6 +6648,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5163,7 +6656,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > <
-| | | | #<procedure #17 <>
+| | | | #<procedure #7 <>
 *** STOPPED IN loop, "debug.scm"@76.42-76.43
 i = 8
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -5179,6 +6672,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5202,6 +6696,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5225,6 +6720,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5248,6 +6744,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5255,7 +6752,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > loop
-| | | | #<procedure #18 loop>
+| | | | #<procedure #22 loop>
 *** STOPPED IN loop, "debug.scm"@76.55-76.56
 i = 8
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -5271,6 +6768,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5278,7 +6776,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > *
-| | | | #<procedure #19 *>
+| | | | #<procedure #10 *>
 *** STOPPED IN loop, "debug.scm"@76.57-76.58
 i = 8
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -5294,6 +6792,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5317,6 +6816,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5340,6 +6840,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5363,6 +6864,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5385,6 +6887,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5392,7 +6895,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > <
-| | | | #<procedure #17 <>
+| | | | #<procedure #7 <>
 *** STOPPED IN loop, "debug.scm"@76.42-76.43
 i = 16
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -5408,6 +6911,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5431,6 +6935,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5454,6 +6959,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5477,6 +6983,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5484,7 +6991,7 @@ c = 31
 d = 41
 1> ,s
 | | | | > list
-| | | | #<procedure #15 list>
+| | | | #<procedure #20 list>
 *** STOPPED IN loop, "debug.scm"@76.69-76.70
 i = 16
 loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
@@ -5500,6 +7007,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5523,6 +7031,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5531,7 +7040,7 @@ d = 41
 1> ,s
 | | | > (list i)
 | | | (16)
-*** STOPPED IN #<procedure #6>, "debug.scm"@77.25-77.26
+*** STOPPED IN #<procedure #12>, "debug.scm"@77.25-77.26
 n = 1001
 o = 2001
 p = 3001
@@ -5544,6 +7053,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5552,7 +7062,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@77.39-77.41
+*** STOPPED IN #<procedure #12>, "debug.scm"@77.39-77.41
 n = 1001
 o = 2001
 p = 3001
@@ -5565,6 +7075,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5573,7 +7084,7 @@ d = 41
 1> ,s
 | | | > 10
 | | | 10
-*** STOPPED IN #<procedure #20>, "debug.scm"@77.46-77.47
+*** STOPPED IN #<procedure #23>, "debug.scm"@77.46-77.47
 i = 1
 j = 10
 n = 1001
@@ -5588,6 +7099,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5595,8 +7107,8 @@ c = 31
 d = 41
 1> ,s
 | | | > <
-| | | #<procedure #17 <>
-*** STOPPED IN #<procedure #20>, "debug.scm"@77.48-77.49
+| | | #<procedure #7 <>
+*** STOPPED IN #<procedure #23>, "debug.scm"@77.48-77.49
 i = 1
 j = 10
 n = 1001
@@ -5611,6 +7123,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5619,7 +7132,7 @@ d = 41
 1> ,s
 | | | > i
 | | | 1
-*** STOPPED IN #<procedure #20>, "debug.scm"@77.50-77.51
+*** STOPPED IN #<procedure #23>, "debug.scm"@77.50-77.51
 i = 1
 j = 10
 n = 1001
@@ -5634,6 +7147,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5642,7 +7156,7 @@ d = 41
 1> ,s
 | | | > j
 | | | 10
-*** STOPPED IN #<procedure #20>, "debug.scm"@77.45-77.52
+*** STOPPED IN #<procedure #23>, "debug.scm"@77.45-77.52
 i = 1
 j = 10
 n = 1001
@@ -5657,6 +7171,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5665,7 +7180,7 @@ d = 41
 1> ,s
 | | | > (< i j)
 | | | #t
-*** STOPPED IN #<procedure #20>, "debug.scm"@77.54-77.58
+*** STOPPED IN #<procedure #23>, "debug.scm"@77.54-77.58
 i = 1
 j = 10
 n = 1001
@@ -5680,6 +7195,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5687,8 +7203,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #20>, "debug.scm"@77.59-77.60
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #23>, "debug.scm"@77.59-77.60
 i = 1
 j = 10
 n = 1001
@@ -5703,6 +7219,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5711,7 +7228,7 @@ d = 41
 1> ,s
 | | | > i
 | | | 1
-*** STOPPED IN #<procedure #20>, "debug.scm"@77.53-77.61
+*** STOPPED IN #<procedure #23>, "debug.scm"@77.53-77.61
 i = 1
 j = 10
 n = 1001
@@ -5726,6 +7243,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5734,7 +7252,7 @@ d = 41
 1> ,s
 | | | > (list i)
 | | | (1)
-*** STOPPED IN #<procedure #6>, "debug.scm"@79.20-79.21
+*** STOPPED IN #<procedure #12>, "debug.scm"@79.20-79.21
 n = 1001
 o = 2001
 p = 3001
@@ -5747,6 +7265,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5754,8 +7273,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@79.22-79.26
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@79.22-79.26
 n = 1001
 o = 2001
 p = 3001
@@ -5768,6 +7287,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5776,7 +7296,7 @@ d = 41
 1> ,s
 | | | > 6000
 | | | 6000
-*** STOPPED IN #<procedure #6>, "debug.scm"@79.28-79.33
+*** STOPPED IN #<procedure #12>, "debug.scm"@79.28-79.33
 n = 1001
 o = 2001
 p = 3001
@@ -5789,6 +7309,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5796,8 +7317,8 @@ c = 31
 d = 41
 1> ,s
 | | | > raise
-| | | #<procedure #21 raise>
-*** STOPPED IN #<procedure #6>, "debug.scm"@79.34-79.35
+| | | #<procedure #24 raise>
+*** STOPPED IN #<procedure #12>, "debug.scm"@79.34-79.35
 n = 1001
 o = 2001
 p = 3001
@@ -5810,6 +7331,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5818,7 +7340,7 @@ d = 41
 1> ,s
 | | | > 1
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@79.27-79.36
+*** STOPPED IN #<procedure #12>, "debug.scm"@79.27-79.36
 n = 1001
 o = 2001
 p = 3001
@@ -5831,6 +7353,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5838,7 +7361,7 @@ c = 31
 d = 41
 1> ,s
 | | | > (raise 1)
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.29-78.34
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.29-78.34
 e = 1
 n = 1001
 o = 2001
@@ -5852,6 +7375,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5859,8 +7383,8 @@ c = 31
 d = 41
 1> ,s
 | | | > char?
-| | | #<procedure #22 char?>
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.35-78.36
+| | | #<procedure #25 char?>
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.35-78.36
 e = 1
 n = 1001
 o = 2001
@@ -5874,6 +7398,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5882,7 +7407,7 @@ d = 41
 1> ,s
 | | | > e
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.28-78.37
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.28-78.37
 e = 1
 n = 1001
 o = 2001
@@ -5896,6 +7421,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5904,7 +7430,7 @@ d = 41
 1> ,s
 | | | > (char? e)
 | | | #f
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.51-78.58
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.51-78.58
 e = 1
 n = 1001
 o = 2001
@@ -5918,6 +7444,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5925,8 +7452,8 @@ c = 31
 d = 41
 1> ,s
 | | | > number?
-| | | #<procedure #23 number?>
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.59-78.60
+| | | #<procedure #26 number?>
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.59-78.60
 e = 1
 n = 1001
 o = 2001
@@ -5940,6 +7467,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5948,7 +7476,7 @@ d = 41
 1> ,s
 | | | > e
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.50-78.61
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.50-78.61
 e = 1
 n = 1001
 o = 2001
@@ -5962,6 +7490,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5970,7 +7499,7 @@ d = 41
 1> ,s
 | | | > (number? e)
 | | | #t
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.63-78.67
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.63-78.67
 e = 1
 n = 1001
 o = 2001
@@ -5984,6 +7513,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -5991,8 +7521,8 @@ c = 31
 d = 41
 1> ,s
 | | | > list
-| | | #<procedure #15 list>
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.69-78.70
+| | | #<procedure #20 list>
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.69-78.70
 e = 1
 n = 1001
 o = 2001
@@ -6006,6 +7536,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6013,8 +7544,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.71-78.75
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.71-78.75
 e = 1
 n = 1001
 o = 2001
@@ -6028,6 +7559,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6036,7 +7568,7 @@ d = 41
 1> ,s
 | | | > 5000
 | | | 5000
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.76-78.77
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.76-78.77
 e = 1
 n = 1001
 o = 2001
@@ -6050,6 +7582,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6058,7 +7591,7 @@ d = 41
 1> ,s
 | | | > e
 | | | 1
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.68-78.78
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.68-78.78
 e = 1
 n = 1001
 o = 2001
@@ -6072,6 +7605,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6080,7 +7614,7 @@ d = 41
 1> ,s
 | | | > (+ 5000 e)
 | | | 5001
-*** STOPPED IN #<procedure #6>, "debug.scm"@78.62-78.79
+*** STOPPED IN #<procedure #12>, "debug.scm"@78.62-78.79
 e = 1
 n = 1001
 o = 2001
@@ -6094,6 +7628,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6102,7 +7637,7 @@ d = 41
 1> ,s
 | | | > (list (+ 5000 e))
 | | | (5001)
-*** STOPPED IN #<procedure #6>, "debug.scm"@82.22-82.23
+*** STOPPED IN #<procedure #12>, "debug.scm"@82.22-82.23
 n = 1001
 o = 2001
 p = 3001
@@ -6115,6 +7650,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6122,8 +7658,8 @@ c = 31
 d = 41
 1> ,s
 | | | > +
-| | | #<procedure #11 +>
-*** STOPPED IN #<procedure #6>, "debug.scm"@82.24-82.28
+| | | #<procedure #8 +>
+*** STOPPED IN #<procedure #12>, "debug.scm"@82.24-82.28
 n = 1001
 o = 2001
 p = 3001
@@ -6136,6 +7672,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6144,7 +7681,7 @@ d = 41
 1> ,s
 | | | > 8000
 | | | 8000
-*** STOPPED IN #<procedure #6>, "debug.scm"@82.30-82.35
+*** STOPPED IN #<procedure #12>, "debug.scm"@82.30-82.35
 n = 1001
 o = 2001
 p = 3001
@@ -6157,6 +7694,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6164,8 +7702,8 @@ c = 31
 d = 41
 1> ,s
 | | | > raise
-| | | #<procedure #21 raise>
-*** STOPPED IN #<procedure #6>, "debug.scm"@82.36-82.37
+| | | #<procedure #24 raise>
+*** STOPPED IN #<procedure #12>, "debug.scm"@82.36-82.37
 n = 1001
 o = 2001
 p = 3001
@@ -6178,6 +7716,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6186,7 +7725,7 @@ d = 41
 1> ,s
 | | | > 2
 | | | 2
-*** STOPPED IN #<procedure #6>, "debug.scm"@82.29-82.38
+*** STOPPED IN #<procedure #12>, "debug.scm"@82.29-82.38
 n = 1001
 o = 2001
 p = 3001
@@ -6199,6 +7738,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6206,7 +7746,7 @@ c = 31
 d = 41
 1> ,s
 | | | > (raise 2)
-*** STOPPED IN #<procedure #6>, "debug.scm"@81.36-81.41
+*** STOPPED IN #<procedure #12>, "debug.scm"@81.36-81.41
 e = 2
 n = 1001
 o = 2001
@@ -6220,6 +7760,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6227,8 +7768,8 @@ c = 31
 d = 41
 1> ,s
 | | | > char?
-| | | #<procedure #22 char?>
-*** STOPPED IN #<procedure #6>, "debug.scm"@81.42-81.43
+| | | #<procedure #25 char?>
+*** STOPPED IN #<procedure #12>, "debug.scm"@81.42-81.43
 e = 2
 n = 1001
 o = 2001
@@ -6242,6 +7783,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6250,7 +7792,7 @@ d = 41
 1> ,s
 | | | > e
 | | | 2
-*** STOPPED IN #<procedure #6>, "debug.scm"@81.35-81.44
+*** STOPPED IN #<procedure #12>, "debug.scm"@81.35-81.44
 e = 2
 n = 1001
 o = 2001
@@ -6264,6 +7806,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6272,7 +7815,7 @@ d = 41
 1> ,s
 | | | > (char? e)
 | | | #f
-*** STOPPED IN #<procedure #6>, "debug.scm"@80.38-80.45
+*** STOPPED IN #<procedure #12>, "debug.scm"@80.38-80.45
 x = 2
 n = 1001
 o = 2001
@@ -6286,6 +7829,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6294,7 +7838,7 @@ d = 41
 1> ,s
 | | | > '(7000)
 | | | (7000)
-*** STOPPED IN #<procedure #6>, "debug.scm"@69.9-82.42
+*** STOPPED IN #<procedure #12>, "debug.scm"@69.9-82.42
 n = 1001
 o = 2001
 p = 3001
@@ -6307,6 +7851,7 @@ i = 11
 j = 21
 k = 31
 l = 41
+mv = 566544
 m = 401
 a = 11
 b = 21
@@ -6316,10 +7861,10 @@ d = 41
 | | > (append (case a ((11) (list a)) (else '())) (case b ((20) '()) (else (...
 | | (11 21 31 41 101 201 301 401 11 21 #(31 41) 10001 16 1 5001 7000)
 | (11 21 31 41 101 201 301 401 11 21 #(31 41) 10001 16 1 5001 7000)
-*** STOPPED IN (string)@1.35-1.39
+*** STOPPED IN (string)@1.45-1.49
 1> ,s
 | > exit
-| #<procedure #24 exit>
-*** STOPPED IN (string)@1.34-1.40
+| #<procedure #27 exit>
+*** STOPPED IN (string)@1.44-1.50
 1> ,s
 | > (exit)

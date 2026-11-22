@@ -35,6 +35,7 @@
 (define **let*-values-sym      (string->canonical-symbol "##let*-values"))
 (define **letrec-values-sym    (string->canonical-symbol "##letrec-values"))
 (define **letrec*-values-sym   (string->canonical-symbol "##letrec*-values"))
+(define **define-values-sym    (string->canonical-symbol "##define-values"))
 (define **do-sym               (string->canonical-symbol "##do"))
 (define **guard-sym            (string->canonical-symbol "##guard"))
 (define **r7rs-guard-sym       (string->canonical-symbol "##r7rs-guard"))

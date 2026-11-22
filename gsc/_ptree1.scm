@@ -242,11 +242,14 @@
 
 (define temp-variable-stamp #f)
 
+(define (new-temp-variable-name name)
+  (string->symbol
+   (string-append (symbol->string name)
+                  "."
+                  (number->string (temp-variable-stamp)))))
+
 (define (new-temp-variable source name)
-  (make-var (string->symbol
-             (string-append (symbol->string name)
-                            "."
-                            (number->string (temp-variable-stamp))))
+  (make-var (new-temp-variable-name name)
             #t
             (ptset-empty)
             (ptset-empty)
@@ -695,6 +698,75 @@
                            lst)
                      cont))))
 
+              ((**define-values-expr? source env)
+               (let* ((formals-src (define-values-formals source))
+                      (body-src (define-values-body source)))
+                 (extract-values-formals
+                  formals-src
+                  env
+                  '()
+                  (lambda (pattern-and-vars seen)
+                    (let* ((pattern (car pattern-and-vars))
+                           (vars-source (cdr pattern-and-vars)))
+                      (gen-bind-multiple
+                       pattern
+                       (map (lambda (var-source)
+                              (let ((var (source-code var-source)))
+                                (env-lookup-var env var var-source)))
+                            vars-source)
+                       body-src
+                       env
+                       (lambda (env cont)
+                         (let* ((values-var-name
+                                 (new-temp-variable-name '##define-values-temp))
+                                (values-var
+                                 (env-lookup-var env values-var-name body-src)))
+                           (cont values-var
+                                 env)))
+                       (lambda (bind-values-var bind-normal-vars)
+                         (let ((bind-vars
+                                (if bind-values-var
+                                    (cons bind-values-var bind-normal-vars)
+                                    bind-normal-vars)))
+                           (let loop ((bind-vars bind-vars)
+                                      (lst lst))
+                             (if (pair? bind-vars)
+                                 (let* ((var-gen-val (car bind-vars))
+                                        (v (vector-ref var-gen-val 0))
+                                        (gen-val (vector-ref var-gen-val 1))
+                                        (node
+                                         (if (and bind-values-var
+                                                  (null? (cdr bind-vars)))
+                                             ;; for space safety, the last
+                                             ;; binding clears the global
+                                             ;; variable containing the values
+                                             (let ((temp (new-temp-variable source 'last-values-temp)))
+                                               (new-call* source env
+                                                 (new-prc source env #f #f (list temp) '() #f #f
+                                                   (new-seq source env
+                                                     (new-set source env
+                                                       (vector-ref bind-values-var 0)
+                                                       (new-cst source env void-object))
+                                                     (new-ref source env temp)))
+                                                 (list (gen-val))))
+                                             (gen-val))))
+
+                                   (if *ptree-port*
+                                     (begin
+                                       (display "  " *ptree-port*)
+                                       (write (var-name v) *ptree-port*)
+                                       (newline *ptree-port*)))
+
+                                   (set-prc-names! (list v) (list node))
+                                   (loop (cdr bind-vars)
+                                         (cons (new-def source env v node)
+                                               lst)))
+                                 (parse-exprs
+                                  (cdr exprs)
+                                  env
+                                  lst
+                                  cont)))))))))))
+
               ((or (**define-macro-expr? source env)
                    (**define-syntax-expr? source env))
 
@@ -975,6 +1047,8 @@
    ((**future-expr? source env)         (pt-future source env use))
    ((**define-expr? source env)
     (pt-syntax-error source "Ill-placed 'define'"))
+   ((**define-values-expr? source env)
+    (pt-syntax-error source "Ill-placed 'define-values'"))
    ((**define-macro-expr? source env)
     (pt-syntax-error source "Ill-placed 'define-macro'"))
    ((**define-syntax-expr? source env)
@@ -1520,13 +1594,48 @@
                   (var (source-code var-source))
                   (v (env-define-var env var var-source)))
              (extract-defs (cons (vector v
-                                         (definition-value (car exprs))
-                                         env)
+                                         (lambda ()
+                                           (pt (definition-value (car exprs))
+                                               env
+                                               'true)))
                                  defs)
                            non-defs
                            (cdr exprs)
                            env
                            cont)))
+          ((**define-values-expr? (car exprs) env)
+           (let* ((formals-src (define-values-formals (car exprs)))
+                  (body-src (define-values-body (car exprs))))
+             (extract-values-formals
+              formals-src
+              env
+              '()
+              (lambda (pattern-and-vars seen)
+                (let* ((pattern (car pattern-and-vars))
+                       (vars-source (cdr pattern-and-vars)))
+                  (gen-bind-multiple
+                   pattern
+                   (map (lambda (var-source)
+                          (let ((var (source-code var-source)))
+                            (env-define-var env var var-source)))
+                        vars-source)
+                   body-src
+                   env
+                   (lambda (env cont)
+                     (let ((values-var
+                            (new-temp-variable body-src 'values-temp)))
+                       (cont values-var
+                             (env-frame env (list values-var)))))
+                   (lambda (bind-values-var bind-normal-vars)
+                     (let ((bind-vars
+                            (if bind-values-var
+                                (cons bind-values-var bind-normal-vars)
+                                bind-normal-vars)))
+                       (extract-defs (append (reverse bind-vars) defs)
+                                     non-defs
+                                     (cdr exprs)
+                                     env
+                                     cont)))))))))
           ((or (**define-macro-expr? (car exprs) env)
                (**define-syntax-expr? (car exprs) env))
            (extract-defs defs
@@ -1635,13 +1744,12 @@
                                     (vars '())
                                     (vals '()))
                            (if (pair? lst)
-                               (let* ((var-val-env (car lst))
-                                      (var (vector-ref var-val-env 0))
-                                      (val (vector-ref var-val-env 1))
-                                      (env (vector-ref var-val-env 2)))
+                               (let* ((var-gen-val (car lst))
+                                      (var (vector-ref var-gen-val 0))
+                                      (gen-val (vector-ref var-gen-val 1)))
                                  (loop (cdr lst)
                                        (cons var vars)
-                                       (cons (pt val env 'true) vals)))
+                                       (cons (gen-val) vals)))
                                (pt-recursive-let
                                  source
                                  vars
@@ -1924,7 +2032,7 @@
                                           deps)
                               dgraph))))
 
-            dgraph))))
+            (reverse dgraph)))))
 
   (define (bind-in-order order)
     (if (null? order)
@@ -2008,10 +2116,7 @@
   (set-prc-names! vars vals)
 
   (let ((order
-         (map varset->list
-              (topological-sort
-               (transitive-closure
-                (dependency-graph))))))
+         (cycle-tolerant-topological-sort (dependency-graph))))
     (bind-in-order order)))
 
 (define (pt-let-values source env use *?)
@@ -2042,152 +2147,216 @@
              vars
              val
              env
-             (lambda (val-var check vals)
-               (if val-var
+             (lambda (env cont)
+               (let ((values-var
+                      (new-temp-variable val 'values-temp)))
+                 (cont values-var
+                       (env-frame env (list values-var)))))
+             (lambda (bind-values-var bind-normal-vars)
 
-                   (let* ((inner-env1
-                           (env-frame env (list val-var)))
-                          (inner-env2
-                           (env-frame inner-env1 vars))
-                          (ptree
-                           (new-call* val inner-env1
-                             (new-prc val inner-env1 #f #f vars '() #f #f
-                               (pt-bindings (cdr bindings)
-                                            (if *? inner-env2 inner-env1)
-                                            use))
-                             vals)))
-                     (new-call* val env
-                       (new-prc val env #f #f (list val-var) '() #f #f
-                         (if check
-                             (new-seq val inner-env1 check ptree)
-                             ptree))
-                       (list (pt val env 'true))))
+               (define (inner env3)
+                 (pt-bindings (cdr bindings) (if *? env3 env) use))
 
-                   (let ((inner-env (env-frame env vars)))
-                     (new-call* val env
-                       (new-prc val env #f #f vars '() #f #f
-                         (pt-bindings (cdr bindings)
-                                      (if *? inner-env env)
-                                      use))
-                       vals))))))))
+               (define (gen-bind-normal env2)
+                 (if (pair? bind-normal-vars)
+                     (let* ((normal-vars
+                             (map (lambda (mb) (vector-ref mb 0))
+                                  bind-normal-vars))
+                            (normal-vals
+                             (map (lambda (mb) ((vector-ref mb 1)))
+                                  bind-normal-vars)))
+                       (new-call* val env2
+                         (new-prc val env2 #f #f normal-vars '() #f #f
+                           (inner (env-frame env2 normal-vars)))
+                         normal-vals))
+                     (inner env2)))
+
+               (define (gen-bind-values env1)
+                 (let* ((values-var (vector-ref bind-values-var 0))
+                        (values-vars (list values-var)))
+                   (new-call* val env1
+                     (new-prc val env1 #f #f values-vars '() #f #f
+                       (gen-bind-normal (env-frame env1 values-vars)))
+                     (list ((vector-ref bind-values-var 1))))))
+
+               (if bind-values-var
+                   (gen-bind-values env)
+                   (gen-bind-normal env)))))))
 
     (pt-bindings all-bindings env use)))
 
-(define (gen-bind-multiple pattern vars val env cont)
+(define (gen-bind-multiple pattern vars val env new-temp-var cont)
+
+  (define (gen-values val env gen-check)
+    (if (and gen-check (safe? env))
+        (let* ((values-var (new-temp-variable val 'values-temp))
+               (inner-env (env-frame env (list values-var))))
+          (new-call* val env
+            (new-prc val env #f #f (list values-var) '() #f #f
+              (new-seq val inner-env
+                (gen-check values-var inner-env)
+                (new-ref val inner-env values-var)))
+            (list (pt val env 'true))))
+        (pt val env 'true)))
+
   (cond ((< pattern 0)
 
          (cond ((= pattern -1)
-                (cont #f
-                      #f
-                      (list (gen-call-prim-notsafe val env
-                              **values->list-sym
-                              (list (pt val env 'true))))))
+                (cont
+                 #f
+                 (list
+                  (vector
+                   (car vars)
+                   (lambda ()
+                     (gen-call-prim-notsafe val env
+                       **values->list-sym
+                       (list (gen-values val env #f))))))))
 
                ((= pattern -2)
-                (let ((val-var (new-temp-variable val 'temp)))
-                  (cont val-var
-                        (and (safe? env)
-                             (new-conj val env
-                               (gen-call-prim-notsafe val env
-                                 **values?-sym
-                                 (list (new-ref val env val-var)))
-                               (new-conj val env
-                                 (gen-call-prim-notsafe val env
-                                   **fx=-sym
-                                   (list (gen-call-prim-notsafe val env
-                                           **values-length-sym
-                                           (list (new-ref val env val-var)))
-                                         (new-cst val env 0)))
-                                 (gen-call-prim-notsafe val env
-                                   **raise-wrong-number-of-values-exception-sym
-                                   (list (new-ref val env val-var))))))
-                        (list (new-tst val env
-                                (gen-call-prim-notsafe val env
-                                  **values?-sym
-                                  (list (new-ref val env val-var)))
-                                (gen-call-prim-notsafe val env
-                                  **values-ref-sym
-                                  (list (new-ref val env val-var)
-                                        (new-cst val env 0)))
-                                (new-ref val env val-var))
-                              (new-tst val env
-                                (gen-call-prim-notsafe val env
-                                  **values?-sym
-                                  (list (new-ref val env val-var)))
-                                (gen-call-prim-notsafe val env
-                                  **values->list-sym
-                                  (list (new-ref val env val-var)
-                                        (new-cst val env 1)))
-                                (new-cst val env '()))))))
+                (new-temp-var
+                 env
+                 (lambda (values-var env2)
+                   (cont
+                    (vector
+                     values-var
+                     (lambda ()
+                       (gen-values
+                        val
+                        env
+                        (lambda (values-var2 env3)
+                          (new-conj val env3
+                            (gen-call-prim-notsafe val env3
+                              **values?-sym
+                              (list (new-ref val env3 values-var2)))
+                            (new-conj val env3
+                              (gen-call-prim-notsafe val env3
+                                **fx=-sym
+                                (list (gen-call-prim-notsafe val env3
+                                        **values-length-sym
+                                        (list (new-ref val env3 values-var2)))
+                                      (new-cst val env3 0)))
+                              (gen-call-prim-notsafe val env3
+                                **raise-wrong-number-of-values-exception-sym
+                                (list (new-ref val env3 values-var2)))))))))
+                    (list
+                     (vector
+                      (car vars)
+                      (lambda ()
+                        (new-tst val env2
+                          (gen-call-prim-notsafe val env2
+                            **values?-sym
+                            (list (new-ref val env2 values-var)))
+                          (gen-call-prim-notsafe val env2
+                            **values-ref-sym
+                            (list (new-ref val env2 values-var)
+                                  (new-cst val env2 0)))
+                          (new-ref val env2 values-var))))
+                     (vector
+                      (cadr vars)
+                      (lambda ()
+                        (new-tst val env2
+                          (gen-call-prim-notsafe val env2
+                            **values?-sym
+                            (list (new-ref val env2 values-var)))
+                          (gen-call-prim-notsafe val env2
+                            **values->list-sym
+                            (list (new-ref val env2 values-var)
+                                  (new-cst val env2 1)))
+                          (new-cst val env2 '())))))))))
 
                (else
-                (let ((val-var (new-temp-variable val 'temp)))
-                  (cont val-var
-                        (and (safe? env)
-                             (new-disj val env
-                               (new-conj val env
-                                 (gen-call-prim-notsafe val env
-                                   **values?-sym
-                                   (list (new-ref val env val-var)))
-                                 (gen-call-prim-notsafe val env
-                                   **fx>=-sym
-                                   (list (gen-call-prim-notsafe val env
-                                           **values-length-sym
-                                           (list (new-ref val env val-var)))
-                                         (new-cst val env (- -1 pattern)))))
-                               (gen-call-prim-notsafe val env
-                                 **raise-wrong-number-of-values-exception-sym
-                                 (list (new-ref val env val-var)))))
-                        (let ((n (length vars)))
-                          (map-index (lambda (var i)
-                                       (gen-call-prim-notsafe val env
-                                         (if (= i (- n 1))
-                                             **values->list-sym
-                                             **values-ref-sym)
-                                         (list (new-ref val env val-var)
-                                               (new-cst val env i))))
-                                     vars)))))))
+                (new-temp-var
+                 env
+                 (lambda (values-var env2)
+                   (let ((n (length vars)))
+                     (cont
+                      (vector
+                       values-var
+                       (lambda ()
+                         (gen-values
+                          val
+                          env
+                          (lambda (values-var2 env3)
+                            (new-disj val env3
+                              (new-conj val env3
+                                (gen-call-prim-notsafe val env3
+                                  **values?-sym
+                                  (list (new-ref val env3 values-var2)))
+                                (gen-call-prim-notsafe val env3
+                                  **fx>=-sym
+                                  (list (gen-call-prim-notsafe val env3
+                                          **values-length-sym
+                                          (list (new-ref val env3 values-var2)))
+                                        (new-cst val env3 (- -1 pattern)))))
+                              (gen-call-prim-notsafe val env3
+                                **raise-wrong-number-of-values-exception-sym
+                                (list (new-ref val env3 values-var2))))))))
+                      (map-index (lambda (var i)
+                                   (vector
+                                    var
+                                    (lambda ()
+                                      (gen-call-prim-notsafe val env2
+                                        (if (= i (- n 1))
+                                            **values->list-sym
+                                            **values-ref-sym)
+                                        (list (new-ref val env2 values-var)
+                                              (new-cst val env2 i))))))
+                                 vars))))))))
 
         ((= pattern 1)
-         (if (safe? env)
-             (let ((val-var (new-temp-variable val 'temp)))
-               (cont val-var
-                     (new-conj val env
-                       (gen-call-prim-notsafe val env
-                         **values?-sym
-                         (list (new-ref val env val-var)))
-                       (gen-call-prim-notsafe val env
-                         **raise-wrong-number-of-values-exception-sym
-                         (list (new-ref val env val-var))))
-                     (list (new-ref val env val-var))))
-             (cont #f
-                   #f
-                   (list (pt val env 'true)))))
+         (cont
+          #f
+          (list
+           (vector
+            (car vars)
+            (lambda ()
+              (gen-values
+               val
+               env
+               (lambda (values-var2 env2)
+                 (new-conj val env2
+                   (gen-call-prim-notsafe val env2
+                     **values?-sym
+                     (list (new-ref val env2 values-var2)))
+                   (gen-call-prim-notsafe val env2
+                     **raise-wrong-number-of-values-exception-sym
+                     (list (new-ref val env2 values-var2)))))))))))
 
         (else
-         (let ((val-var (new-temp-variable val 'temp)))
-           (cont val-var
-                 (and (safe? env)
-                      (new-disj val env
-                        (new-conj val env
-                          (gen-call-prim-notsafe val env
-                            **values?-sym
-                            (list (new-ref val env val-var)))
-                          (gen-call-prim-notsafe val env
-                            **fx=-sym
-                            (list (gen-call-prim-notsafe val env
-                                    **values-length-sym
-                                    (list (new-ref val env val-var)))
-                                  (new-cst val env pattern))))
-                        (gen-call-prim-notsafe val env
-                          **raise-wrong-number-of-values-exception-sym
-                          (list (new-ref val env val-var)))))
-                 (map-index (lambda (var i)
-                              (gen-call-prim-notsafe val env
-                                **values-ref-sym
-                                (list (new-ref val env val-var)
-                                      (new-cst val env i))))
-                            vars))))))
+         (new-temp-var
+          env
+          (lambda (values-var env2)
+            (cont
+             (vector
+              values-var
+              (lambda ()
+                (gen-values
+                 val
+                 env
+                 (lambda (values-var2 env3)
+                   (new-disj val env3
+                     (new-conj val env3
+                       (gen-call-prim-notsafe val env3
+                         **values?-sym
+                         (list (new-ref val env3 values-var2)))
+                       (gen-call-prim-notsafe val env3
+                         **fx=-sym
+                         (list (gen-call-prim-notsafe val env3
+                                 **values-length-sym
+                                 (list (new-ref val env3 values-var2)))
+                               (new-cst val env3 pattern))))
+                     (gen-call-prim-notsafe val env3
+                       **raise-wrong-number-of-values-exception-sym
+                       (list (new-ref val env3 values-var2))))))))
+             (map-index (lambda (var i)
+                          (vector
+                           var
+                           (lambda ()
+                             (gen-call-prim-notsafe val env2
+                               **values-ref-sym
+                               (list (new-ref val env2 values-var)
+                                     (new-cst val env2 i))))))
+                        vars)))))))
 
 (define (pt-begin source env use)
   (pt-sequence source (begin-body source) env use))
@@ -2489,6 +2658,9 @@
 (define (**define-expr? source env)
   (match **define-sym -2 source env))
 
+(define (**define-values-expr? source env)
+  (match **define-values-sym 3 source env))
+
 (define (**define-macro-expr? source env)
   (match **define-macro-sym -3 source env))
 
@@ -2616,6 +2788,14 @@
              loc))
           (else
            (caddr code)))))
+
+(define (define-values-formals source)
+  (let ((code (source-code source)))
+    (cadr code)))
+
+(define (define-values-body source)
+  (let ((code (source-code source)))
+    (caddr code)))
 
 (define (parms->source parms loc)
   (if (or (pair? parms) (null? parms))
@@ -2782,81 +2962,23 @@
 
                    ((eq? binding-style 'list)
                     (if (eqv? 2 len-binding)
-                        (let* ((vars-src
-                                (sourcify (car binding) binding-src))
-                               (vars
-                                (source-code vars-src)))
-                          (if (or (pair? vars)
-                                  (null? vars))
-                              (let loop2 ((lst2 vars)
-                                          (n 0)
-                                          (rev-vars '())
-                                          (seen (if allow-dups? '() seen)))
-                                (cond ((null? lst2)
-                                       (loop1 (cdr lst1)
-                                              (cons
-                                               (cons
-                                                (cons n
-                                                      (reverse rev-vars))
-                                                (cadr binding))
-                                               rev-bindings)
-                                              seen))
-                                      ((pair? lst2)
-                                       (let* ((var-src
-                                               (sourcify (car lst2)
-                                                         vars-src))
-                                              (var
-                                               (source-code var-src))
-                                              (rest
-                                               (cdr lst2)))
-                                         (variable var-src)
-                                         (if (memq var seen)
-                                             (duplicate-variable-binding
-                                              var-src)
-                                             (loop2 rest
-                                                    (+ n 1)
-                                                    (cons (new-variable var-src)
-                                                          rev-vars)
-                                                    (cons var
-                                                          seen)))))
-                                      (else
-                                       (let* ((var-src
-                                               (sourcify lst2 binding-src))
-                                              (var
-                                               (source-code var-src)))
-                                         (variable var-src)
-                                         (if (memq var seen)
-                                             (duplicate-variable-binding
-                                              var-src)
-                                             (loop1 (cdr lst1)
-                                                    (cons
-                                                     (cons
-                                                      (cons (- -1 n)
-                                                            (reverse
-                                                             (cons
-                                                              (new-variable var-src)
-                                                              rev-vars)))
-                                                      (cadr binding))
-                                                     rev-bindings)
-                                                    (cons var
-                                                          seen)))))))
-                              (let* ((var-src
-                                      vars-src)
-                                     (var
-                                      (source-code var-src)))
-                                (variable var-src)
-                                (if (memq var seen)
-                                    (duplicate-variable-binding
-                                     var-src)
-                                    (loop1 (cdr lst1)
-                                           (cons
-                                            (cons
-                                             (cons -1
-                                                   (list (new-variable var-src)))
-                                             (cadr binding))
-                                            rev-bindings)
-                                           (cons var
-                                                 seen))))))
+
+                        (let ((formals-src
+                               (sourcify (car binding) binding-src)))
+                          (extract-values-formals
+                           formals-src
+                           env
+                           (if allow-dups? '() seen)
+                           (lambda (pattern-and-vars seen2)
+                             (loop1 (cdr lst1)
+                                    (cons
+                                     (cons (cons (car pattern-and-vars)
+                                                 (map new-variable
+                                                      (cdr pattern-and-vars)))
+                                           (cadr binding))
+                                     rev-bindings)
+                                    seen2))))
+
                         (ill-formed-binding-list)))
 
                    (else
@@ -2901,6 +3023,75 @@
 
           (else
            (ill-formed-binding-list)))))
+
+(define (extract-values-formals formals-src env seen cont)
+
+  (define (duplicate-variable-binding src)
+    (pt-syntax-error src "Duplicate variable binding"))
+
+  (define (variable src)
+    (if (not (bindable-var? src env))
+        (pt-syntax-error src "Identifier expected")))
+
+  (let ((formals
+         (source-code formals-src)))
+    (if (or (pair? formals)
+            (null? formals))
+
+        (let loop ((lst formals)
+                   (n 0)
+                   (rev-vars '())
+                   (seen seen))
+          (cond ((null? lst)
+                 (cont (cons n
+                             (reverse rev-vars))
+                       seen))
+                ((pair? lst)
+                 (let* ((var-src
+                         (sourcify (car lst)
+                                   formals-src))
+                        (var
+                         (source-code var-src))
+                        (rest
+                         (cdr lst)))
+                   (variable var-src)
+                   (if (memq var seen)
+                       (duplicate-variable-binding
+                        var-src)
+                       (loop rest
+                             (+ n 1)
+                             (cons var-src
+                                   rev-vars)
+                             (cons var
+                                   seen)))))
+                (else
+                 (let* ((var-src
+                         (sourcify lst formals-src))
+                        (var
+                         (source-code var-src)))
+                   (variable var-src)
+                   (if (memq var seen)
+                       (duplicate-variable-binding
+                        var-src)
+                       (cont (cons (- -1 n)
+                                   (reverse
+                                    (cons var-src
+                                          rev-vars)))
+                             (cons var
+                                   seen)))))))
+
+        (let* ((var-src
+                formals-src)
+               (var
+                (source-code var-src)))
+          (variable var-src)
+          (if (memq var seen)
+              (duplicate-variable-binding
+               var-src)
+              (cont (cons -1
+                          (list var-src))
+                    (cons var
+                          seen)))))))
 
 (define (proper-do-bindings? source env)
   (let ((bindings (cadr (source-code source))))

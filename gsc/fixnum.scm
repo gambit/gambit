@@ -156,6 +156,7 @@ compiler-error
 compiler-internal-error
 compiler-user-error
 compiler-user-warning
+cycle-tolerant-topological-sort
 every?
 for-each-index
 keep
@@ -278,6 +279,9 @@ string->canonical-symbol
 **letrec-sym
 **let-values-sym
 **let*-values-sym
+**letrec-values-sym
+**letrec*-values-sym
+**define-values-sym
 **macro-scope-sym
 **make-delay-promise-sym
 **namespace-scope-sym

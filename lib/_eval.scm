@@ -1620,6 +1620,7 @@
 
 (define (##comp-top-define-values top-cte src tail?)
   (let* ((names (##define-values-names src))
+         (pattern (##car names))
          (vars-src (##cdr names)))
     (##append-names-checking-duplicates '() vars-src)
     (let* ((cte
@@ -1630,20 +1631,18 @@
                       (##var-lookup cte var-src))
                     vars-src)))
            (vals
-            (##comp-subexpr cte (##define-values-vals src) #f))
-           (rest?
-            (##car names)))
+            (##comp-subexpr cte (##define-values-vals src) #f)))
 
       ;; optimize single var case (caveat: no error when not 1 value)
       (if (and ##optimize-single-var-bind-values?
-               (##not rest?)
+               (##not (##fx< pattern 0)) ;; no rest?
                (##fx= (##vector-length inds) 1))
 
           (macro-gen ##gen-glo-def src
             (##vector-ref inds 0)
             vals)
 
-          (if rest?
+          (if (##fx< pattern 0) ;; rest?
               (macro-gen ##gen-glo-define-values-rest src
                 inds
                 vals)
@@ -2377,7 +2376,7 @@
 
 (define (##comp-body cte src tail? body)
 
-  (define (internal-defs cte rev-vars rev-vals body)
+  (define (internal-defs cte rev-vars rev-gen-vals body)
 
     (define (check-unique-variable name-src name)
       (##variable name-src)
@@ -2392,13 +2391,13 @@
         (let* ((src (##sourcify (##car body) src))
                (code (##source-code src)))
           (if (##not (##pair? code))
-              (internal-defs-done cte rev-vars rev-vals body)
+              (internal-defs-done cte rev-vars rev-gen-vals body)
               (let* ((first-src (##sourcify (##car code) src))
                      (descr (##macro-lookup cte (##source-code first-src))))
                 (if (vector? descr)
                     (internal-defs cte
                                    rev-vars
-                                   rev-vals
+                                   rev-gen-vals
                                    (##cons
                                     (##macro-expand cte src descr)
                                     (##cdr body)))
@@ -2407,7 +2406,7 @@
                        (##shape src src -1)
                        (internal-defs cte
                                       rev-vars
-                                      rev-vals
+                                      rev-gen-vals
                                       (##append (##cdr code) (##cdr body))))
                       ((##define)
                        (let* ((name-src (##definition-name src))
@@ -2420,8 +2419,46 @@
                          (let ((val (##definition-value src)))
                            (internal-defs cte
                                           (##cons name rev-vars)
-                                          (##cons val rev-vals)
+                                          (##cons
+                                           (lambda (cte)
+                                             (##comp-subexpr cte (##sourcify val src) #f))
+                                           rev-gen-vals)
                                           (##cdr body)))))
+                      ((##define-values)
+                       (let* ((names (##define-values-names src))
+                              (pattern (##car names))
+                              (vars-src (##cdr names))
+                              (vals (##define-values-vals src))
+                              (new-rev-vars
+                               (##cons (macro-values-var)
+                                       (##append-names-checking-duplicates
+                                        rev-vars
+                                        vars-src)))
+                              (new-rev-gen-vals
+                               (let loop ((rev-gen-vals
+                                           rev-gen-vals)
+                                          (lst
+                                           vars-src))
+                                 (if (##pair? lst)
+                                     (let* ((var-src (##car lst))
+                                            (last? (##null? (##cdr lst))))
+                                       (loop (##cons
+                                              (lambda (cte)
+                                                (macro-gen ##gen-cst-no-step var-src
+                                                  '#!unbound))
+                                              rev-gen-vals)
+                                             (##cdr lst)))
+                                     (##cons
+                                      (lambda (cte)
+                                        (macro-gen ##gen-loc-def-vals src
+                                          (##comp-subexpr cte vals #f)
+                                          pattern
+                                          (##fx+ 1 (##length rev-gen-vals))))
+                                      rev-gen-vals)))))
+                         (internal-defs cte
+                                        new-rev-vars
+                                        new-rev-gen-vals
+                                        (##cdr body))))
                       ((##define-macro ##define-syntax)
                        (let* ((def-syntax? (##eq? descr '##define-syntax))
                               (name-src (##definition-name src))
@@ -2432,13 +2469,13 @@
                                          name
                                          (##macro-descr val def-syntax?))
                                         rev-vars
-                                        rev-vals
+                                        rev-gen-vals
                                         (##cdr body))))
                       ((##include ##include-ci)
                        (##shape src src -2)
                        (internal-defs cte
                                       rev-vars
-                                      rev-vals
+                                      rev-gen-vals
                                       (##cons
                                        (##include-file-as-a-begin-expr src)
                                        (##cdr body))))
@@ -2446,52 +2483,54 @@
                        (##shape src src -1)
                        (internal-defs (##cte-process-declare cte src)
                                       rev-vars
-                                      rev-vals
+                                      rev-gen-vals
                                       (##cdr body)))
                       ((##namespace)
                        (##shape src src -1)
                        (internal-defs (##cte-process-namespace cte src)
                                       rev-vars
-                                      rev-vals
+                                      rev-gen-vals
                                       (##cdr body)))
 ;;                      ((##declare-scope)
 ;;                       (##shape src src -1)
 ;;                       ;;............
 ;;                       (internal-defs cte
 ;;                                      rev-vars
-;;                                      rev-vals
+;;                                      rev-gen-vals
 ;;                                      (##cdr body)))
 ;;                      ((##namespace-scope)
 ;;                       (##shape src src -1)
 ;;                       ;;............
 ;;                       (internal-defs cte
 ;;                                      rev-vars
-;;                                      rev-vals
+;;                                      rev-gen-vals
 ;;                                      (##cdr body)))
 ;;                      ((##macro-scope)
 ;;                       (##shape src src -1)
 ;;                       ;;............
 ;;                       (internal-defs cte
 ;;                                      rev-vars
-;;                                      rev-vals
+;;                                      rev-gen-vals
 ;;                                      (##cdr body)))
                       (else
-                       (internal-defs-done cte rev-vars rev-vals body)))))))
+                       (internal-defs-done cte rev-vars rev-gen-vals body)))))))
 
         (##raise-expression-parsing-exception
          'empty-body
          src)))
 
-  (define (internal-defs-done cte rev-vars rev-vals body)
+  (define (internal-defs-done cte rev-vars rev-gen-vals body)
     (if (##pair? rev-vars)
         (let* ((vars
                 (##reverse rev-vars))
-               (vals
-                (##reverse rev-vals))
+               (gen-vals
+                (##reverse rev-gen-vals))
                (new-cte
                 (##cte-frame-i cte vars))
                (vals*
-                (##comp-vals new-cte src vals))
+                (##map (lambda (gen-val)
+                         (gen-val new-cte))
+                       gen-vals))
                (body*
                 (##comp-seq new-cte src tail? #t body)))
           (macro-gen ##gen-let src
@@ -2559,26 +2598,30 @@
             locat)))))
 
 (define (##define-values-names src)
+  (##shape src src 3)
   (let* ((code (##source-code src))
          (names-src (##sourcify (##cadr code) src))
          (names (##source-code names-src)))
     (if (or (##pair? names)
             (##null? names))
         (let loop ((lst names)
-                   (rev-names '()))
+                   (rev-names '())
+                   (pattern 0))
           (cond ((##pair? lst)
                  (let ((name-src (##car lst)))
                    (##variable name-src)
                    (loop (##cdr lst)
-                         (##cons name-src rev-names))))
+                         (##cons name-src rev-names)
+                         (##fx+ pattern 1))))
                 ((##null? lst)
-                 (##cons #f (##reverse rev-names)))
+                 (##cons pattern (##reverse rev-names)))
                 (else
                  (##variable lst)
-                 (##cons #t (##reverse (##cons lst rev-names))))))
+                 (##cons (##fx- -1 pattern)
+                         (##reverse (##cons lst rev-names))))))
         (begin
           (##variable names-src)
-          (##list #t names-src)))))
+          (##list -1 names-src)))))
 
 (define (##define-values-vals src)
   (let ((code (##source-code src)))
@@ -4195,6 +4238,86 @@
       (macro-code-set! c (##fx+ len 1) patterns)
       (macro-code-set! c (##fx+ len 2) rec?)
       c)))
+
+(define ##cprc-loc-def-vals
+  (macro-make-cprc
+   (let* ((vals (macro-code-run (^ 0)))
+          (pattern (^ 1))
+          (over (^ 2)))
+
+     (define (wrong-number-of-values $code rte vals)
+       (##first-argument ;; keep $code and rte in environment-map
+        (##raise-wrong-number-of-values-exception vals)
+        $code
+        rte))
+
+     (define (done $code rte)
+       (##first-argument ;; keep $code and rte in environment-map
+        (##void)
+        $code
+        rte))
+
+     (cond ((##fx< pattern 0) ;; rest?
+
+            (if (##values? vals)
+
+                (begin
+
+                  (if (##fx< (##values-length vals)
+                             (##fx- -1 pattern))
+                      (wrong-number-of-values $code rte vals))
+
+                  (macro-rte-set! rte (##fx- over 1) (##values->list vals (##fx- -1 pattern)))
+
+                  (let loop ((i (##fx- -2 pattern)))
+                    (if (##fx< i 0)
+                        (done $code rte)
+                        (begin
+                          (macro-rte-set! rte
+                                          (##fx+ (##fx+ over pattern) i)
+                                          (##values-ref vals i))
+                          (loop (##fx- i 1))))))
+
+                (cond ((##fx= pattern -1)
+                       (macro-rte-set! rte (##fx- over 1) (##list vals))
+                       (##check-heap-limit)
+                       (done $code rte))
+                      ((##fx= pattern -2)
+                       (macro-rte-set! rte (##fx- over 2) vals)
+                       (macro-rte-set! rte (##fx- over 1) '())
+                       (done $code rte))
+                      (else
+                       (wrong-number-of-values $code rte vals)))))
+
+           ((##fx= pattern 1)
+
+            (if (##values? vals)
+                (wrong-number-of-values $code rte vals))
+
+            (macro-rte-set! rte (##fx- over 1) vals)
+            (done $code rte))
+
+           (else
+
+            (if (##not (and (##values? vals)
+                            (##fx= pattern (##values-length vals))))
+                (wrong-number-of-values $code rte vals))
+
+            (let loop ((i (##fx- pattern 1)))
+              (if (##fx< i 0)
+                  (done $code rte)
+                  (begin
+                    (macro-rte-set! rte
+                                    (##fx+ (##fx- over pattern) i)
+                                    (##values-ref vals i))
+                    (loop (##fx- i 1))))))))))
+
+(define ##gen-loc-def-vals
+  (macro-make-gen (vals pattern over)
+    (let ((stepper (##no-stepper)))
+      (macro-make-code ##cprc-loc-def-vals cte src stepper (vals)
+        pattern
+        over))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

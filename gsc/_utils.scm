@@ -527,7 +527,7 @@
     (let loop ((graph-vector graph-vector))
       (let ((changed? #f))
 
-        (define (gnode-get-depvars var)
+        (define (gnode-get-depvars var graph-vector)
           (let loop ((f 0) (l (- (vector-length graph-vector) 1)))
             (if (< l f)
                 (varset-empty)
@@ -543,7 +543,7 @@
         (define (closure depvars)
           (varset-union-multi
            (cons depvars
-                 (map (lambda (var) (gnode-get-depvars var))
+                 (map (lambda (var) (gnode-get-depvars var graph-vector))
                       (varset->list depvars)))))
 
         (let ((new-graph-vector
@@ -561,7 +561,12 @@
                         (make-gnode (gnode-var x) new-depvars))))))))
           (if changed?
               (loop new-graph-vector)
-              (vect->list new-graph-vector)))))))
+              (map (lambda (node)
+                     (let ((var (gnode-var node)))
+                       (make-gnode
+                        var
+                        (gnode-get-depvars var new-graph-vector))))
+                   graph)))))))
 
 (define (topological-sort graph) ;; topological sort fixed to handle cycles
   (let loop ((graph graph) (rev-order '()))
@@ -607,10 +612,15 @@
                 (or (get-no-depvars graph)
                     (get-cycle graph)))
                (vars-to-remove
-                (list->varset (map gnode-var nodes-to-remove))))
-          (loop (remove graph nodes-to-remove vars-to-remove)
+                (map gnode-var nodes-to-remove)))
+          (loop (remove graph nodes-to-remove (list->varset vars-to-remove))
                 (cons vars-to-remove rev-order)))
         (reverse rev-order))))
+
+(define (cycle-tolerant-topological-sort graph)
+  (topological-sort
+   (transitive-closure
+    graph)))
 
 ;;;----------------------------------------------------------------------------
 ;;

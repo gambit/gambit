@@ -49,6 +49,7 @@
 (##define-macro (macro-do-loop-var)    ''##do-loop##)
 (##define-macro (macro-guard-exc-var)  ''##guard-exc##)
 (##define-macro (macro-guard-cont-var) ''##guard-cont##)
+(##define-macro (macro-values-var)     ''##values##)
 
 ;;;----------------------------------------------------------------------------
 

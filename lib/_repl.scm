@@ -11,10 +11,10 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (##define-macro (mk-degen params . def)
-  `(let () (##declare (not inline)) (lambda ($code ,@params) ,@def)))
+  `(let () (##declare (not inline)) (lambda ($code implicit-letrec* ,@params) ,@def)))
 
 (##define-macro (degen proc . args)
-  `(,proc $code ,@args))
+  `(,proc $code implicit-letrec* ,@args))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -39,31 +39,33 @@
 (define-prim (##cond? x)  (and (##pair? x) (##eq? (##car x) 'cond)))
 (define-prim (##and? x)   (and (##pair? x) (##eq? (##car x) 'and)))
 (define-prim (##or? x)    (and (##pair? x) (##eq? (##car x) 'or)))
+
 (define-prim (##void-constant? x)
   (or (##eq? x (##void))
       (and (##pair? x)
            (##eq? (##car x) 'quote)
+           (##pair? (##cdr x))
            (##eq? (##cadr x) (##void)))))
 
-(define-prim (##unbegin x)
-  (if (##begin? x)
-      (##cdr x)
-      (##list x)))
+(define-prim (##lambda? x)
+  (and (##pair? x)
+       (##eq? (##car x) 'lambda)
+       (##pair? (##cdr x))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define-prim ##degen-top
   (mk-degen ()
-    (##decomp (^ 0))))
+    (##list (##decomp (^ 0)))))
 
 (define-prim ##degen-cst
   (mk-degen ()
     (let ((val (^ 0)))
-      (##inverse-eval val))))
+      (##list (##inverse-eval val)))))
 
 (define-prim ##degen-loc-ref-x-y
   (mk-degen (up over)
-    (degen ##degen-up-over up over)))
+    (##list (degen ##degen-up-over up over))))
 
 (define-prim ##degen-up-over
   (mk-degen (up over)
@@ -87,65 +89,72 @@
 
 (define-prim ##degen-glo-ref
   (mk-degen ()
-    (##global-var->identifier (^ 0))))
+    (##list (##global-var->identifier (^ 0)))))
 
 (define-prim ##degen-loc-set
   (mk-degen ()
-    (##list 'set!
-            (degen ##degen-up-over (^ 1) (^ 2))
-            (##decomp (^ 0)))))
+    (##list
+     (##list 'set!
+             (degen ##degen-up-over (^ 1) (^ 2))
+             (##decomp (^ 0))))))
 
 (define-prim ##degen-glo-set
   (mk-degen ()
-    (##list 'set!
-            (##global-var->identifier (^ 1))
-            (##decomp (^ 0)))))
+    (##list
+     (##list 'set!
+             (##global-var->identifier (^ 1))
+             (##decomp (^ 0))))))
 
 (define-prim ##degen-glo-def
   (mk-degen ()
-    (##list 'define
-            (##global-var->identifier (^ 1))
-            (##decomp (^ 0)))))
+    (##list
+     (##list 'define
+             (##global-var->identifier (^ 1))
+             (##decomp (^ 0))))))
 
 (define-prim ##degen-if2
   (mk-degen ()
-    (##list 'if
-            (##decomp (^ 0))
-            (##decomp (^ 1)))))
+    (##list
+     (##list 'if
+             (##decomp (^ 0))
+             (##decomp (^ 1))))))
 
 (define-prim ##degen-if3
   (mk-degen ()
-    (##list 'if
-            (##decomp (^ 0))
-            (##decomp (^ 1))
-            (##decomp (^ 2)))))
+    (##list
+     (##list 'if
+             (##decomp (^ 0))
+             (##decomp (^ 1))
+             (##decomp (^ 2))))))
 
 (define-prim ##degen-seq
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
-          (val2 (##decomp (^ 1))))
-      (##cons 'begin
-              (##cons val1
-                      (##unbegin val2))))))
+          (val2 (##decomp-body (^ 1) #f))) ;; #f means implicit begin
+      (##cons val1
+              val2))))
 
 (define-prim ##degen-quasi-list->vector
   (mk-degen ()
-    (##list 'quasiquote
-            (##list->vector
-             (##degen-quasi-unquote-splicing-cdr
-              (##decomp (^ 0)))))))
+    (##list
+     (##list 'quasiquote
+             (##list->vector
+              (##degen-quasi-unquote-splicing-cdr
+               (##decomp (^ 0))))))))
 
 (define-prim ##degen-quasi-append
   (mk-degen ()
-    (##degen-quasi-append-aux
-     (##degen-quasi-unquote-splicing (##decomp (^ 0)))
-     (##decomp (^ 1)))))
+    (##list
+     (##degen-quasi-append-aux
+      (##degen-quasi-unquote-splicing (##decomp (^ 0)))
+      (##decomp (^ 1))))))
 
 (define-prim ##degen-quasi-cons
   (mk-degen ()
-    (##degen-quasi-append-aux
-     (##degen-quasi-unquote (##decomp (^ 0)))
-     (##decomp (^ 1)))))
+    (##list
+     (##degen-quasi-append-aux
+      (##degen-quasi-unquote (##decomp (^ 0)))
+      (##decomp (^ 1))))))
 
 (define-prim (##degen-quasi-append-aux a b)
   (##list 'quasiquote
@@ -188,11 +197,11 @@
 (define-prim ##degen-cond-if
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
-          (val2 (##decomp (^ 1)))
+          (val2 (##decomp-body (^ 1) #f)) ;; #f means implicit begin
           (val3 (##decomp (^ 2))))
       (##build-cond
        (##cons val1
-               (##unbegin val2))
+               val2)
        val3))))
 
 (define-prim ##degen-cond-or
@@ -209,91 +218,155 @@
       (##build-cond (##list val1 '=> val2) val3))))
 
 (define-prim (##build-cond clause rest)
-  (##cons 'cond
-          (##cons clause
-                  (cond ((##cond? rest)
-                         (##cdr rest))
-                        ((##void-constant? rest)
-                         '())
-                        (else
-                         (##list (##cons 'else
-                                         (##unbegin rest))))))))
+  (##list
+   (##cons 'cond
+           (##cons clause
+                   (cond ((##cond? rest)
+                          (##cdr rest))
+                         ((##void-constant? rest)
+                          '())
+                         (else
+                          (##list (##cons 'else
+                                          (##unbegin rest)))))))))
 
 (define-prim ##degen-or
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
           (val2 (##decomp (^ 1))))
-      (if (##or? val2)
-          (##cons 'or (##cons val1 (##cdr val2)))
-          (##list 'or val1 val2)))))
+      (##list
+       (if (##or? val2)
+           (##cons 'or (##cons val1 (##cdr val2)))
+           (##list 'or val1 val2))))))
 
 (define-prim ##degen-and
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
           (val2 (##decomp (^ 1))))
-      (if (##and? val2)
-          (##cons 'and (##cons val1 (##cdr val2)))
-          (##list 'and val1 val2)))))
+      (##list
+       (if (##and? val2)
+           (##cons 'and (##cons val1 (##cdr val2)))
+           (##list 'and val1 val2))))))
 
 (define-prim ##degen-case
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
           (val2 (##decomp (^ 1))))
-      (##cons 'case (##cons val1 val2)))))
+      (##list
+       (##cons 'case (##cons val1 val2))))))
 
 (define-prim ##degen-case-list
   (mk-degen ()
-    (let ((val1 (##decomp (^ 0)))
+    (let ((val1 (##decomp-body (^ 0) #f)) ;; #f means implicit begin
           (val2 (##decomp (^ 1))))
-      (##cons (##cons (^ 2)
-                      (##unbegin val1))
-              val2))))
+      (##list
+       (##cons (##cons (^ 2)
+                       val1)
+               val2)))))
 
 (define-prim ##degen-case-else
   (mk-degen ()
     (let ((val (##decomp (^ 0))))
-      (if (##void-constant? val)
-          '()
-          (##list (##cons 'else
-                          (##unbegin val)))))))
+      (##list
+       (if (##void-constant? val)
+           '()
+           (##list (##cons 'else
+                           (##unbegin val))))))))
 
 (define-prim ##degen-case-send
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
           (val2 (##decomp (^ 1))))
-      (##cons (##list (or (^ 2) 'else)
-                      '=>
-                      val1)
-              val2))))
+      (##list
+       (##cons (##list (or (^ 2) 'else)
+                       '=>
+                       val1)
+               val2)))))
 
 (define-prim ##degen-let
   (mk-degen ()
-    (let ((n (macro-code-length $code)))
-      (let loop ((i (##fx- n 2)) (vals '()))
-        (if (##fx< 0 i)
-            (loop (##fx- i 1)
-                  (##cons (##decomp (macro-code-ref $code i)) vals))
-            (let ((body
-                   (##decomp (^ 0)))
+    (let ((n
+           (macro-code-length $code))
+          (form
+           (case (macro-code-ref $code (##fx- (macro-code-length $code) 1))
+             ((#f) 'let)
+             ((#t) 'letrec)
+             (else 'letrec*))))
+      (let loop1 ((i
+                   (##fx- n 2))
+                  (rev-frame-vars
+                   (##reverse (##cte-frame-vars (macro-code-cte (^ 0)))))
                   (bindings
-                   (##make-bindings
-                    (##cte-frame-vars (macro-code-cte (^ 0)))
-                    vals))
-                  (form
-                   (case (macro-code-ref $code (##fx- (macro-code-length $code) 1))
-                     ((#f) 'let)
-                     ((#t) 'letrec)
-                     (else 'letrec*))))
-              (##cons form
-                      (##cons bindings
-                              (##unbegin body)))))))))
+                   '()))
+
+        (define (bind-single var val)
+          (##cons (if (##eq? form 'letrec*)
+                      (if (##lambda? val)
+                          (##cons 'define
+                                  (##cons (##cons var (##cadr val))
+                                          (##cddr val)))
+                          (##list 'define var val))
+                      (##list var val))
+                  bindings))
+
+        (define (bind-multiple formals val)
+          (##cons (##list 'define-values formals val)
+                  bindings))
+
+        (if (##fx< 0 i)
+            (let* ((c (macro-code-ref $code i))
+                   (val (##decomp c))
+                   (cprc (macro-code-cprc c)))
+              (if (and (##eq? form 'letrec*)
+                       (##eq? cprc ##cprc-loc-def-vals))
+                  (let* ((pattern
+                          (let (($code c)) (^ 1)))
+                         (nb-formals
+                          (if (##fx< pattern 0)
+                              (##fx- pattern)
+                              pattern)))
+                    (let loop2 ((j
+                                 (if (##fx< pattern 0)
+                                     (##fx- i 2)
+                                     (##fx- i 1)))
+                                (rev-frame-vars
+                                 (if (##fx< pattern 0)
+                                     (##cddr rev-frame-vars)
+                                     (##cdr rev-frame-vars)))
+                                (formals
+                                 (if (##fx< pattern 0)
+                                     (##cadr rev-frame-vars)
+                                     '())))
+                      (if (##fx<= (##fx- i j) nb-formals)
+                          (loop2 (##fx- j 1)
+                                 (##cdr rev-frame-vars)
+                                 (##cons (##car rev-frame-vars)
+                                         formals))
+                          (loop1 j
+                                 rev-frame-vars
+                                 (bind-multiple formals val)))))
+                  (loop1 (##fx- i 1)
+                         (##cdr rev-frame-vars)
+                         (bind-single (##car rev-frame-vars) val))))
+            (let ((body
+                   (##decomp-body (^ 0) #t))) ;; #t means implicit letrec*
+              (if (##eq? form 'letrec*)
+                  (let ((bindings-and-body
+                         (##append bindings body)))
+                    (if implicit-letrec*
+                        bindings-and-body
+                        (##list
+                         (##cons 'let
+                                 (##cons '()
+                                         bindings-and-body)))))
+                  (##list
+                   (##cons form
+                           (##cons bindings
+                                   body))))))))))
 
 (define-prim ##degen-let-values
   (mk-degen ()
     (let* ((n
             (macro-code-length $code))
-           (body
-            (##decomp (^ 0)))
            (bindings
             (##make-bindings-values
              (##cte-frame-vars (macro-code-cte (^ 0)))
@@ -303,10 +376,17 @@
             (case (macro-code-ref $code (##fx- (macro-code-length $code) 1))
               ((#f) 'let-values)
               ((#t) 'letrec-values)
-              (else 'letrec*-values))))
-      (##cons form
-              (##cons bindings
-                      (##unbegin body))))))
+              (else 'letrec*-values)))
+           (body
+            (##decomp-body (^ 0) #t))) ;; #t means implicit letrec*
+      (##list
+       (##cons form
+               (##cons bindings
+                       body))))))
+
+(define-prim ##degen-loc-def-vals
+  (mk-degen ()
+    (##list (##decomp (^ 0)))))
 
 (define-prim (##make-bindings-values vars patterns $code)
   (let ((vars-vect (##list->vector vars))) ;;TODO: do conversion to vectors elsewhere
@@ -342,45 +422,24 @@
               (##make-bindings (##cdr l1) (##cdr l2)))
       '()))
 
-(define-prim ##degen-letrec
-  (mk-degen ()
-    (##degen-letrec-aux $code 'letrec)))
-
-(define-prim ##degen-letrec*
-  (mk-degen ()
-    (##degen-letrec-aux $code 'letrec*)))
-
-(define-prim (##degen-letrec-aux $code sym)
-  (let ((n (macro-code-length $code)))
-    (let loop ((i (##fx- n 2)) (vals '()))
-      (if (##fx< 0 i)
-          (loop (##fx- i 1)
-                (##cons (##decomp (macro-code-ref $code i)) vals))
-          (let ((body
-                 (##decomp (^ 0)))
-                (bindings
-                 (##make-bindings (macro-code-ref $code (##fx- n 1))
-                                  vals)))
-            (##cons sym
-                    (##cons bindings
-                            (##unbegin body))))))))
-
 (define-prim ##degen-prc-req
   (mk-degen ()
     (let* ((n (macro-code-length $code))
-           (body (##decomp (^ 0)))
+           (body (##decomp-body (^ 0) #t)) ;; #t means implicit letrec*
            (params (macro-code-ref $code (##fx- n 1))))
-      (##cons 'lambda
-              (##cons params
-                      (##unbegin body))))))
+      (##list
+       (##cons 'lambda
+               (##cons params
+                       body))))))
 
 (define-prim ##degen-prc-rest
   (mk-degen ()
-    (let ((body (##decomp (^ 0)))
+    (let ((body (##decomp-body (^ 0) #t)) ;; #t means implicit letrec*
           (params (##make-params (^ 3) #t #f '())))
-      (##cons 'lambda
-              (##cons params
-                      (##unbegin body))))))
+      (##list
+       (##cons 'lambda
+               (##cons params
+                       body))))))
 
 (define-prim ##degen-prc
   (mk-degen ()
@@ -390,16 +449,17 @@
             (loop (##fx- i 1)
                   (##cons (##decomp (macro-code-ref $code i)) inits))
             (let ((body
-                   (##decomp (^ 0)))
+                   (##decomp-body (^ 0) #t)) ;; #t means implicit letrec*
                   (params
                    (##make-params
                     (macro-code-ref $code (##fx- n 1))
                     (macro-code-ref $code (##fx- n 4))
                     (macro-code-ref $code (##fx- n 3))
                     inits)))
-              (##cons 'lambda
-                      (##cons params
-                              (##unbegin body)))))))))
+              (##list
+               (##cons 'lambda
+                       (##cons params
+                               body)))))))))
 
 (define-prim (##make-params parms rest? keys inits)
   (let* ((nb-parms
@@ -473,33 +533,38 @@
 
 (define-prim ##degen-app0
   (mk-degen ()
-    (##list (##decomp (^ 0)))))
+    (##list
+     (##list (##decomp (^ 0))))))
 
 (define-prim ##degen-app1
   (mk-degen ()
-    (##list (##decomp (^ 0))
-            (##decomp (^ 1)))))
+    (##list
+     (##list (##decomp (^ 0))
+             (##decomp (^ 1))))))
 
 (define-prim ##degen-app2
   (mk-degen ()
-    (##list (##decomp (^ 0))
-            (##decomp (^ 1))
-            (##decomp (^ 2)))))
+    (##list
+     (##list (##decomp (^ 0))
+             (##decomp (^ 1))
+             (##decomp (^ 2))))))
 
 (define-prim ##degen-app3
   (mk-degen ()
-    (##list (##decomp (^ 0))
-            (##decomp (^ 1))
-            (##decomp (^ 2))
-            (##decomp (^ 3)))))
+    (##list
+     (##list (##decomp (^ 0))
+             (##decomp (^ 1))
+             (##decomp (^ 2))
+             (##decomp (^ 3))))))
 
 (define-prim ##degen-app4
   (mk-degen ()
-    (##list (##decomp (^ 0))
-            (##decomp (^ 1))
-            (##decomp (^ 2))
-            (##decomp (^ 3))
-            (##decomp (^ 4)))))
+    (##list
+     (##list (##decomp (^ 0))
+             (##decomp (^ 1))
+             (##decomp (^ 2))
+             (##decomp (^ 3))
+             (##decomp (^ 4))))))
 
 (define-prim ##degen-app
   (mk-degen ()
@@ -508,31 +573,35 @@
         (if (##not (##fx< i 0))
             (loop (##fx- i 1)
                   (##cons (##decomp (macro-code-ref $code i)) vals))
-            vals)))))
+            (##list vals))))))
 
 (define-prim ##degen-delay
   (mk-degen ()
-    (##list 'delay (##decomp (^ 0)))))
+    (##list
+     (##list 'delay (##decomp (^ 0))))))
 
 (define-prim ##degen-future
   (mk-degen ()
-    (##list 'future (##decomp (^ 0)))))
+    (##list
+     (##list 'future (##decomp (^ 0))))))
 
 (define-prim ##degen-reraise
   (mk-degen ()
-    (##void)))
+    (##list
+     (##void))))
 
 (define ##degen-guard
   (mk-degen (form)
-    (let ((body (##decomp (^ 0)))
+    (let ((body (##decomp-body (^ 0) #f)) ;; #f means implicit begin
           (handler (##decomp (^ 1))))
-      (##cons form
-              (##cons (##cons
-                       (##car (##cte-frame-vars (macro-code-cte (^ 1))))
-                       (if (##pair? handler) ;; cond form?
-                           (##cdr handler)
-                           '()))
-                      (##unbegin body))))))
+      (##list
+       (##cons form
+               (##cons (##cons
+                        (##car (##cte-frame-vars (macro-code-cte (^ 1))))
+                        (if (##pair? handler) ;; cond form?
+                            (##cdr handler)
+                            '()))
+                       body))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -582,6 +651,7 @@
 
    (##cons ##cprc-let         ##degen-let)
    (##cons ##cprc-let-values  ##degen-let-values)
+   (##cons ##cprc-loc-def-vals ##degen-loc-def-vals)
 
    (##cons ##cprc-prc-req0    ##degen-prc-req)
    (##cons ##cprc-prc-req1    ##degen-prc-req)
@@ -631,11 +701,22 @@
          p)))))
 
 (define-prim (##decomp $code)
+  (let ((x (##decomp-body $code #f))) ;; #f means implicit begin
+    (if (##pair? (##cdr x))
+        (##cons 'begin x)
+        (##car x))))
+
+(define-prim (##decomp-body $code implicit-letrec*)
   (let ((cprc (macro-code-cprc $code)))
     (let ((x (##assq cprc ##decomp-dispatch-table)))
       (if x
           (degen (##cdr x))
-          '?))))
+          '(?)))))
+
+(define-prim (##unbegin x)
+  (if (##begin? x)
+      (##cdr x)
+      (##list x)))
 
 (define-prim (##decompile proc)
 
@@ -826,7 +907,8 @@
        (##eq? var (macro-selector-var))
        (##eq? var (macro-do-loop-var))
        (##eq? var (macro-guard-exc-var))
-       (##eq? var (macro-guard-cont-var)))))
+       (##eq? var (macro-guard-cont-var))
+       (##eq? var (macro-values-var)))))
 
 (define-prim (##hidden-parameter? param)
   (or (##eq? param ##trace-depth)
