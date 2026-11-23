@@ -304,7 +304,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@91.35-91.41
 a = 10
 b = 20
@@ -320,7 +319,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@91.47-91.48
 a = 10
 b = 20
@@ -360,7 +358,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 1 2)
-| | #<unknown>
+| | 1
+| | 2
 *** STOPPED IN test, "debug.scm"@91.72-91.73
 a = 10
 b = 20
@@ -408,7 +407,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 5 6)
-| | #<unknown>
+| | 5
+| | 6
 *** STOPPED IN test, "debug.scm"@91.118-91.124
 a = 10
 b = 20
@@ -440,7 +440,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 7 8)
-| | #<unknown>
+| | 7
+| | 8
 *** STOPPED IN test, "debug.scm"@91.132-91.134
 a = '()
 b = '(1)
@@ -474,7 +475,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@92.36-92.42
 a = 10
 b = 20
@@ -490,7 +490,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@92.48-92.49
 a = '()
 a = 10
@@ -539,7 +538,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 1 2)
-| | #<unknown>
+| | 1
+| | 2
 *** STOPPED IN test, "debug.scm"@92.73-92.74
 c = '(1 2)
 b = '(1)
@@ -618,7 +618,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 5 6)
-| | #<unknown>
+| | 5
+| | 6
 *** STOPPED IN test, "debug.scm"@92.119-92.125
 g = 5
 h = '(6)
@@ -682,7 +683,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 7 8)
-| | #<unknown>
+| | 7
+| | 8
 *** STOPPED IN test, "debug.scm"@92.133-92.135
 i = 7
 j = 8
@@ -736,7 +738,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@93.38-93.44
 a = #!unbound
 b = #!unbound
@@ -772,7 +773,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@93.50-93.51
 a = #!unbound
 b = #!unbound
@@ -862,7 +862,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 1 2)
-| | #<unknown>
+| | 1
+| | 2
 *** STOPPED IN test, "debug.scm"@93.75-93.76
 a = #!unbound
 b = #!unbound
@@ -970,7 +971,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 5 6)
-| | #<unknown>
+| | 5
+| | 6
 *** STOPPED IN test, "debug.scm"@93.121-93.127
 a = #!unbound
 b = #!unbound
@@ -1042,7 +1044,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 7 8)
-| | #<unknown>
+| | 7
+| | 8
 *** STOPPED IN test, "debug.scm"@93.135-93.137
 a = '()
 b = '(1)
@@ -1096,7 +1099,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@94.39-94.45
 a = #!unbound
 b = #!unbound
@@ -1132,7 +1134,6 @@ c = 30
 d = 40
 1> ,s
 | | > (values)
-| | #<unknown>
 *** STOPPED IN test, "debug.scm"@94.51-94.52
 a = '()
 b = #!unbound
@@ -1222,7 +1223,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 1 2)
-| | #<unknown>
+| | 1
+| | 2
 *** STOPPED IN test, "debug.scm"@94.76-94.77
 a = '()
 b = '(1)
@@ -1330,7 +1332,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 5 6)
-| | #<unknown>
+| | 5
+| | 6
 *** STOPPED IN test, "debug.scm"@94.122-94.128
 a = '()
 b = '(1)
@@ -1402,7 +1405,8 @@ c = 30
 d = 40
 1> ,s
 | | > (values 7 8)
-| | #<unknown>
+| | 7
+| | 8
 *** STOPPED IN test, "debug.scm"@94.136-94.138
 a = '()
 b = '(1)
@@ -1490,7 +1494,9 @@ c = 30
 d = 40
 1> ,s
 | | > (values 11 (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1))))) 22)
-| | #<unknown>
+| | 11
+| | #<procedure #5>
+| | 22
 *** STOPPED IN test, "debug.scm"@99.9-99.15
 a12 = 11
 b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))
@@ -1560,7 +1566,9 @@ c = 30
 d = 40
 1> ,s
 | | > (values 111 (lambda (n) (if (< n 0) n (* d12 c12 (b12 (- n 1))))) 222)
-| | #<unknown>
+| | 111
+| | #<procedure #6>
+| | 222
 *** STOPPED IN test, "debug.scm"@100.7-100.10
 a12 = 11
 b12 = (lambda (n) (if (< n 0) n (+ a12 f12 (e12 (- n 1)))))

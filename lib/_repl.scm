@@ -2363,7 +2363,7 @@
                         (##step-on stepper))
                     (execute))))
              (else
-              (let ((result
+              (let ((results
                      (##parameterize1
                       ##trace-depth
                       depth
@@ -2379,9 +2379,16 @@
                 (let ((saved-stepper
                        (##vector-copy (##current-stepper))))
                   (##step-off stepper)
-                  (output-to-repl-with-indent depth " " result) ;; show result
+                  (##call-with-values
+                    (lambda ()
+                      results)
+                    (lambda results
+                      (##for-each
+                       (lambda (obj)
+                         (output-to-repl-with-indent depth " " obj)) ;; show result
+                       results)))
                   (##step-restore saved-stepper)
-                  result))))))))
+                  results))))))))
 
 (define-prim (##nontail-call-for-leap execute stepper)
   (##declare (not interrupts-enabled))
