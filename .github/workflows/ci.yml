@@ -172,8 +172,15 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install texinfo autoconf2.69
+        for attempt in 1 2 3; do
+          if sudo apt-get update && sudo apt-get install -y texinfo autoconf2.69; then
+            break
+          fi
+          if [ "$attempt" -eq 3 ]; then
+            exit 1
+          fi
+          sleep 30
+        done
         sudo ln -s -f `which autoconf2.69` `which autoconf`
 
     - name: Build and Test with C compiler
