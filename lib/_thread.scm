@@ -3708,9 +3708,9 @@
                            ;; release low-level lock of mutex
                            (macro-unlock-mutex! mutex)
 
-                           ;; check if abandoned mutex exception needs
-                           ;; to be raised
-                           (if (##eq? state (macro-mutex-state-abandoned))
+                           ;; Raise according to the state before acquisition,
+                           ;; after installing the new owner.
+                           (if (##eq? owner (macro-mutex-state-abandoned))
                                (##thread-abandoned-mutex-action!)
                                #t))) ;; signal success
 
