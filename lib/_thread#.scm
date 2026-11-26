@@ -1942,9 +1942,12 @@
        (macro-tgroup-tgroups-deq-init! tgroups)
        (macro-tgroup-threads-deq-init! tgroup)
        (if parent
-         (macro-tgroup-tgroups-deq-insert-at-tail!
-          (macro-tgroup-tgroups parent)
-          tgroup))
+         (begin
+           (macro-lock-tgroup! parent)
+           (macro-tgroup-tgroups-deq-insert-at-tail!
+            (macro-tgroup-tgroups parent)
+            tgroup)
+           (macro-unlock-tgroup! parent)))
        tgroup)))
 
 (define-deq
