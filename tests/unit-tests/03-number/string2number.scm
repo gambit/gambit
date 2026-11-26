@@ -18,6 +18,19 @@
 (test-equal 9.765625e-4 (string->number "9.765625e-4"))
 (test-equal -1.5+2/3i (string->number "-1.5+2/3i"))
 
+(test-equal #f (string->number ""))
+(test-equal #f (string->number "#e"))
+(test-equal #f (string->number "+-1"))
+
+(test-equal
+ -123+4773704568770671/316912650057057350374175801344i
+ (string->number "#e123@3.141592653589793"))
+
+(test-equal #f (string->number "#e1e400@1"))
+(test-equal #f (string->number "#e+inf.0@0"))
+(test-equal #f (string->number "#e1@1e400"))
+(test-equal #f (string->number "#e1e400@1"))
+
 ;;; Test exceptions
 
 (test-error-tail type-exception? (string->number 1))

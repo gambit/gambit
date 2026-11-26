@@ -5373,7 +5373,17 @@ for a discussion of branch cuts.
     (macro-if-cpxnum
      (let ((n (##make-polar x y)))
        (if (##eq? e 'e)
-           (##inexact->exact n)
+           (and (macro-number-dispatch n
+                  #f  ;; n is not a number
+                  #t  ;; n is a fixnum
+                  #t  ;; n is a bignum
+                  #t  ;; n is a ratnum
+                  (macro-flonum-rational? n)  ;; n is a flonum
+                  (let ((real (macro-cpxnum-real n))  ;; n is a cpxnum
+                        (imag (macro-cpxnum-imag n)))
+                    (and (macro-noncpxnum-rational? real)
+                         (macro-noncpxnum-rational? imag))))
+                (##inexact->exact n))
            n))
      (if (##eqv? y 0)
          (if (##eq? e 'e)
